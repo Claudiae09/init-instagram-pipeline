@@ -1,0 +1,12 @@
+# Secrets — never share these
+.env
+service_account.json
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Token cache / logs
+.token_cache.json
+*.log

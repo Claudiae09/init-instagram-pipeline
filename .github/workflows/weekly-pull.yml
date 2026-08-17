@@ -1,0 +1,75 @@
+name: Weekly Instagram pull
+
+on:
+  schedule:
+    # Mondays 09:00 America/New_York. GitHub cron is UTC and does NOT observe DST,
+    # so this is 13:00 UTC (= 9am EDT summer / 8am EST winter). Close enough weekly.
+    - cron: "0 13 * * 1"
+  workflow_dispatch:        # lets you run it manually from the Actions tab
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write        # needed to commit the refreshed CSVs back
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Refresh Instagram token (and store the new one)
+        env:
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: python refresh_token.py
+
+      - name: Pull Instagram data
+        env:
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_MEDIA_SINCE: "2025-01-01"
+          IG_MEDIA_LIMIT: "1500"
+          GRAPH_API_VERSION: v23.0
+        run: python instagram_pull.py
+
+      - name: Build Instagram-export-format table
+        run: python export_format.py
+
+      - name: Push to Google Sheet
+        env:
+          GSHEET_ID: ${{ secrets.GSHEET_ID }}
+          GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
+        run: python push_to_sheets.py
+
+      - name: Write freshness status
+        env:
+          GSHEET_ID: ${{ secrets.GSHEET_ID }}
+          GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
+        run: python write_status.py
+
+      # account_insights.csv is append-only (one row per day) and stories.csv
+      # accumulates — a fresh checkout would otherwise reset that history every
+      # run, so commit the updated CSVs back to the repo.
+      - name: Commit updated data back to the repo
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add csv/
+          if git diff --staged --quiet; then
+            echo "no data changes to commit"
+          else
+            git commit -m "Weekly Instagram pull: $(date -u +%Y-%m-%d)"
+            git push
+          fi
+
+      # If anything above fails, the run shows red in the Actions tab and GitHub
+      # emails you — so a silent stall like the local launchd one can't recur.
