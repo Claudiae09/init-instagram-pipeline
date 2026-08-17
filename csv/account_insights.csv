@@ -1,4 +1,4 @@
 date,pull_timestamp,username,followers_count,follows_count,media_count,reach,profile_views,website_clicks,accounts_engaged,total_interactions,likes,comments,saves,shares,follows_and_unfollows,reach_non_follower,reach_follower
 2026-06-23,2026-06-23T18:23:01,init.fiu,5902,5373,2482,47,22,2,1,1,1,0,0,0,,32.0,15.0
 2026-08-16,2026-08-16T19:59:00,init.fiu,5913,5436,2504,1556,64,4,76,106,80,6,1,5,,468.0,1078.0
-2026-08-17,2026-08-17T00:35:03,init.fiu,5913,5436,2504,1569,64,4,77,107,81,6,1,5,,469.0,1088.0
+2026-08-17,2026-08-17T13:43:09,init.fiu,5913,5435,2504,638,36,3,16,22,17,0,1,2,,143.0,524.0
