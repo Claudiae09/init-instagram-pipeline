@@ -844,7 +844,6 @@ pointer-events:none}
 .block ul{margin:4px 0 14px;padding-left:20px}
 .block li{margin:0 0 8px}
 .dim{color:var(--muted);font-size:var(--fs-micro)}
-.build{opacity:.75}
 .allhist{color:var(--muted);font-size:var(--fs-micro);margin:10px 0 0;font-style:italic}
 
 /* ── disclosures. One component, one default: closed. ────────────────────── */
@@ -982,8 +981,14 @@ transition:filter .15s ease,transform .1s ease}
 .explore:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 
 a{color:var(--accent)}
-footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);
+footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);
 color:var(--muted);font-size:var(--fs-small)}
+footer p{margin:0}
+.sig{font-size:var(--fs-body);color:var(--fg);letter-spacing:var(--track-body)}
+.sig b{font-weight:600}
+.fmeta{margin-top:6px!important;font-size:var(--fs-small)}
+.build{margin-top:10px!important;font-size:var(--fs-micro);opacity:.7;
+font-variant-numeric:tabular-nums}
 /* Reduced motion means no vestibular motion: travel, parallax, large
    surfaces sliding. Colour and opacity feedback are comprehension aids and
    should survive. The springs read the query at runtime. */
@@ -1437,13 +1442,14 @@ def build(m):
          competitor_section(m),
          "</div>",
          charts_section(m),
-         # Build stamp so it is obvious at a glance whether the deployed page
-         # is the current one. Without it, a stale deploy is indistinguishable
-         # from a bug in the page itself.
-         f'<footer>Generated from the Instagram API. Data through '
-         f'{newest:%B %d, %Y}; the page rebuilds itself every week.<br>'
-         f'<span class="build">Page built '
-         f'{dt.datetime.now():%d %b %Y, %H:%M} local</span></footer>',
+         # The build stamp stays, quietly. Without it a stale deploy is
+         # indistinguishable from a bug in the page.
+         f'<footer><p class="sig">Built by <b>Claudia Espinosa</b> '
+         f'for INIT FIU</p>'
+         f'<p class="fmeta">Generated from the Instagram API · data through '
+         f'{newest:%B %-d, %Y} · updates itself every week</p>'
+         f'<p class="build">Page built '
+         f'{dt.datetime.now():%-d %b %Y, %H:%M}</p></footer>',
          "</div>"]
     return ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
