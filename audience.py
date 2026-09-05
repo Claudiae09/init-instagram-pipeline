@@ -85,3 +85,72 @@ def audience_recommendations(af):
                f"unknown, so the percentages are indicative rather than exact. "
                f"Collected {af['as_of']}.</i>")
     return out
+
+
+# ── follower growth ─────────────────────────────────────────────────────────
+GAP_DAYS = 14          # a longer hole than this means collection was not running
+
+
+def follower_growth(csv_dir):
+    """Follower counts over the continuously-collected stretch.
+
+    Readings exist from before the daily job started, separated by a 54 day
+    hole. Plotting straight through that would draw a smooth line across two
+    months nobody measured, so the series starts after the last real gap and
+    the earlier reading is reported separately as context.
+    """
+    p = csv_dir / "account_insights.csv"
+    if not p.exists():
+        return {"enough": False}
+    d = pd.read_csv(p)
+    d["date"] = pd.to_datetime(d["date"], errors="coerce")
+    d["followers_count"] = pd.to_numeric(d["followers_count"], errors="coerce")
+    d = (d.dropna(subset=["date", "followers_count"])
+           .sort_values("date").drop_duplicates("date", keep="last"))
+    if len(d) < 3:
+        return {"enough": False}
+
+    gaps = d["date"].diff().dt.days
+    start = 0
+    for i, g in enumerate(gaps):
+        if g and g > GAP_DAYS:
+            start = i
+    series = d.iloc[start:]
+    dropped = d.iloc[:start]
+    if len(series) < 3:
+        return {"enough": False}
+
+    first, last = series.iloc[0], series.iloc[-1]
+    days = max(1, (last["date"] - first["date"]).days)
+    change = last["followers_count"] - first["followers_count"]
+    return {
+        "enough": True,
+        "points": [(r["date"], float(r["followers_count"]))
+                   for _, r in series.iterrows()],
+        "current": float(last["followers_count"]),
+        "change": float(change),
+        "days": days,
+        "per_week": change / days * 7,
+        "pct": (change / first["followers_count"] * 100)
+               if first["followers_count"] else 0,
+        "since": first["date"],
+        "until": last["date"],
+        "earlier": ({"date": dropped.iloc[-1]["date"],
+                     "count": float(dropped.iloc[-1]["followers_count"])}
+                    if len(dropped) else None),
+    }
+
+
+def growth_note(g):
+    if not g.get("enough"):
+        return []
+    up = g["change"] >= 0
+    out = [f"<b>{'Working' if up else 'Not working'}:</b> "
+           f"{'up' if up else 'down'} <b>{abs(g['change']):,.0f} followers</b> "
+           f"in {g['days']} days, about {abs(g['per_week']):,.0f} a week."]
+    if g.get("earlier"):
+        out.append(f"Daily tracking began {g['since']:%d %b}. The reading before "
+                   f"that was {g['earlier']['count']:,.0f} on "
+                   f"{g['earlier']['date']:%d %b}, with nothing measured in "
+                   f"between.")
+    return out

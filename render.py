@@ -141,9 +141,11 @@ def decision_card(m):
             + "".join(f"<li>{r}</li>" for r in recs) + "</ol>" + why + "</div>")
     return (
         '<section class="decision">'
-        '<div class="decision-head"><h2>What to do next</h2>'
+        '<div class="decision-head"><h2>What changed</h2>'
         f'<div class="segs" role="tablist" aria-label="Time period">'
         f'{"".join(tabs)}</div></div>'
+        + '<p class="sub2 head-sub">How this period compares with the one '
+          'before it, and why.</p>'
         + "".join(panes) + "</section>")
 
 
@@ -273,7 +275,9 @@ def format_section(m):
             '<p class="sub2">Follows the period you picked above.</p>'
             f'<div class="segs" role="tablist" aria-label="Post format">'
             f'{"".join(fmt_tabs)}</div>'
-            + "".join(panes) + "</section>")
+            + '<p class="sub2 head-sub">How this period compares with the one '
+          'before it, and why.</p>'
+        + "".join(panes) + "</section>")
 
 
 def stories_section():
@@ -350,6 +354,35 @@ def topic_section(m):
             f'<ul class="csays">{bullets}</ul>{table}</section>')
 
 
+def growth_chart(g, w=600, h=130, pad=10):
+    """A plain line chart of follower counts. Inline SVG so it needs no
+    library and no network request, and scales with the column."""
+    pts = g["points"]
+    ys = [v for _, v in pts]
+    lo, hi = min(ys), max(ys)
+    span = (hi - lo) or 1
+    n = len(pts) - 1
+
+    def xy(i, v):
+        return (pad + i / n * (w - 2 * pad),
+                h - pad - (v - lo) / span * (h - 2 * pad))
+
+    coords = [xy(i, v) for i, (_, v) in enumerate(pts)]
+    line = " ".join(f"{x:.1f},{y:.1f}" for x, y in coords)
+    area = (f"M{coords[0][0]:.1f},{h - pad:.1f} L" + line
+            + f" L{coords[-1][0]:.1f},{h - pad:.1f} Z")
+    dots = "".join(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="3"/>' for x, y in coords)
+    return (
+        f'<svg class="spark" viewBox="0 0 {w} {h}" role="img" '
+        f'aria-label="Followers from {g["since"]:%d %b} to {g["until"]:%d %b}, '
+        f'{g["points"][0][1]:,.0f} rising to {g["current"]:,.0f}">'
+        f'<path class="ga" d="{area}"/>'
+        f'<polyline class="gl" points="{line}"/>'
+        f'<g class="gd">{dots}</g></svg>'
+        f'<div class="gax"><span>{g["since"]:%d %b}</span>'
+        f'<span>{g["until"]:%d %b}</span></div>')
+
+
 def audience_section():
     """Who follows the account. The only part of the page not about posts."""
     af = AU.audience_findings(CSV)
@@ -368,9 +401,27 @@ def audience_section():
             for seg, _, pct in sorted(age["segments"],
                                       key=lambda x: x[0]))
         bars = f'<div class="bars">{rows}</div>'
-    return ('<section class="block"><h2>Who follows you</h2>'
-            '<p class="sub2">Instagram reports this for followers, refreshed '
-            'weekly.</p>'
+    g = AU.follower_growth(CSV)
+    growth = ""
+    if g.get("enough"):
+        up = g["change"] >= 0
+        growth = (
+            '<div class="growth">'
+            f'<div class="gchart">{growth_chart(g)}</div>'
+            '<div class="gnums">'
+            f'<div><span>{g["current"]:,.0f}</span>followers now</div>'
+            f'<div><span class="{"up" if up else "down"}">'
+            f'{g["change"]:+,.0f}</span>in {g["days"]} days</div>'
+            f'<div><span>{g["per_week"]:+,.0f}</span>a week</div>'
+            '</div></div>'
+            + '<ul class="csays">'
+            + "".join(f"<li>{n}</li>" for n in AU.growth_note(g)) + "</ul>")
+
+    return ('<section class="block"><h2>Followers</h2>'
+            '<p class="sub2">How the audience is growing, and who is in it. '
+            'Refreshed daily.</p>'
+            + growth
+            + '<h3>Age of your followers</h3>'
             + bars
             + '<ul class="csays">'
             + "".join(f"<li>{b}</li>" for b in AU.audience_recommendations(af))
@@ -549,6 +600,25 @@ a.tlink:hover{text-decoration:underline}
 a.tlink .eg{display:block;color:var(--muted);font-weight:400;
 font-size:var(--fs-micro);line-height:1.35;margin-top:2px;text-decoration:none}
 
+/* ── follower growth ────────────────────────────────────────────────────── */
+.growth{display:grid;grid-template-columns:1fr 150px;gap:20px;align-items:center;
+margin:14px 0 16px}
+.gchart{min-width:0}
+.spark{width:100%;height:auto;display:block;overflow:visible}
+.spark .ga{fill:var(--accent);opacity:.10}
+.spark .gl{fill:none;stroke:var(--accent);stroke-width:2.5;
+stroke-linejoin:round;stroke-linecap:round}
+.spark .gd circle{fill:var(--bg);stroke:var(--accent);stroke-width:2}
+.gax{display:flex;justify-content:space-between;color:var(--muted);
+font-size:var(--fs-micro);margin-top:4px}
+.gnums div{margin:0 0 12px;font-size:var(--fs-micro);color:var(--muted);
+line-height:1.3}
+.gnums div:last-child{margin:0}
+.gnums span{display:block;font-size:var(--fs-lead);font-weight:700;color:var(--fg);
+letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.gnums .up{color:var(--good)}.gnums .down{color:var(--bad)}
+.head-sub{margin:-8px 0 14px}
+
 /* ── audience bars ──────────────────────────────────────────────────────── */
 .bars{margin:14px 0 16px}
 .bar{display:grid;grid-template-columns:56px 1fr 44px;align-items:center;gap:10px;
@@ -574,7 +644,12 @@ a{color:var(--accent)}
 footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);
 color:var(--muted);font-size:var(--fs-small)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
-@media (max-width:520px){.decision-head{flex-direction:column;align-items:flex-start}}
+@media (max-width:520px){
+  .decision-head{flex-direction:column;align-items:flex-start}
+  .growth{grid-template-columns:1fr;gap:14px}
+  .gnums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .gnums div{margin:0}
+}
 """
 
 JS = """
