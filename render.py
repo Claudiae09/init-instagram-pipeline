@@ -145,14 +145,23 @@ def format_section(m):
                           f'<div><span>{sf["reach_med"]:,.0f}</span>median reach</div>'
                           f'<div><span>{sf["passive"]:.0f}</span>likes &amp; stickers</div>'
                           f'<div><span>{sf["shares"]:.0f}</span>shares</div>'
-                          f'<div><span>{sf["n"]}</span>posted</div></div>')
+                          f'<div><span>{sf["sets"]}</span>posted</div></div>')
                 span_s = "this year" if days is None else f"the last {days} days"
                 # Say what the window actually covers, not just what was asked
                 # for — collection began mid-year, so Month and Year overlap.
                 if sf.get("truncated"):
                     span_s += f" \u2014 all {sf['span_days']} days we hold so far"
+                # Spell out frames vs stories: several frames posted back to
+                # back are one story, and the raw frame count reads as if far
+                # more was posted than actually was.
+                detail = ""
+                if sf.get("enough"):
+                    detail = (f" That is {sf['sets']} "
+                              f"stor{'y' if sf['sets'] == 1 else 'ies'} "
+                              f"({sf['n']} frames) across {sf['days_active']} "
+                              f"day{'' if sf['days_active'] == 1 else 's'}.")
                 body = (st + f'<p class="line"><b>Collected daily</b>, since stories '
-                        f'vanish after 24 hours. Showing {span_s}.</p><ul>'
+                        f'vanish after 24 hours. Showing {span_s}.{detail}</p><ul>'
                         + "".join(f"<li>{r}</li>" for r in R.story_recommendations(sf))
                         + "</ul>")
                 panes.append(f'<div class="pane{show}" id="f-{pkey}-{j}" '

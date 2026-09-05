@@ -286,8 +286,19 @@ def story_findings(csv_dir, days=None):
     if len(s) < 5:
         return {"enough": False, "n": len(s), "days": days}
     total_reach = s["reach"].sum()
+    # Each row is one story FRAME. Several frames posted back to back are a
+    # single story you tap through, so count sets too — a gap of more than an
+    # hour starts a new set. "17 frames" and "10 sets" mean different things
+    # and the page should not conflate them.
+    _t = s["_ts"].sort_values() if "_ts" in s.columns else None
+    if _t is not None and len(_t):
+        sets = int((_t.diff() > _pd.Timedelta(hours=1)).sum()) + 1
+        days_active = int(_t.dt.tz_convert("America/New_York").dt.date.nunique())
+    else:
+        sets, days_active = len(s), len(s)
     out = {
         "enough": True, "n": len(s), "days": days,
+        "sets": sets, "days_active": days_active,
         "reach_med": s["reach"].median(),
         "completion": (1 - s["nav_tap_exit"].sum() / total_reach) * 100,
         "replies_per_1k": s["replies"].sum() / total_reach * 1000,
@@ -361,10 +372,12 @@ def story_recommendations(sf):
                "derived from total interactions.</i>")
     if sf.get("truncated"):
         out.append(
-            f"<i>Story collection began {sf['since']}, so this view holds "
-            f"{sf['span_days']} days of stories, not a full "
-            f"{'year' if sf['days'] is None else str(sf['days']) + ' days'}. "
-            f"Month and Year will read the same until more accumulate.</i>")
+            f"<i>Instagram's API only returns stories that are still live, so "
+            f"anything posted before daily collection began on {sf['since']} is "
+            f"gone for good — it cannot be backfilled. This view therefore covers "
+            f"{sf['span_days']} days, not a full "
+            f"{'year' if sf['days'] is None else str(sf['days']) + ' days'}, and "
+            f"Month and Year will match until more history builds up.</i>")
     elif sf["thin"]:
         out.append(f"<i>Early read — {sf['n']} stories. Firms up as the daily job runs.</i>")
     return out
