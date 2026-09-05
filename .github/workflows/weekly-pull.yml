@@ -57,7 +57,7 @@ jobs:
         run: python write_status.py
 
       - name: Build the dashboard page
-        run: python generate_report.py
+        run: python render.py
 
       # account_insights.csv is append-only (one row per day) and stories.csv
       # accumulates — a fresh checkout would otherwise reset that history every
