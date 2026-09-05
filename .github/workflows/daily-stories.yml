@@ -20,6 +20,8 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: write
+    env:
+      HAS_CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
@@ -62,14 +64,15 @@ jobs:
           GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
         run: python write_status.py
 
-      # Deploy straight from here rather than waiting for Cloudflare to
-      # notice the commit. One deploy per pipeline run instead of one per
-      # commit, and a failure shows up in this log instead of a dashboard.
-      # No-ops until CLOUDFLARE_API_TOKEN exists, so it is safe to merge now.
+      # Deploy straight from here rather than waiting for Cloudflare to notice
+      # the commit: one deploy per run instead of one per commit, and failures
+      # land in this log rather than a dashboard.
+      #
+      # The guard reads a JOB-level env var, not a step-level one. A step's own
+      # env block is not available to its own `if`, so the original version of
+      # this would have evaluated the condition against nothing.
       - name: Deploy to Cloudflare
-        if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        if: env.HAS_CF_TOKEN != ''
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
