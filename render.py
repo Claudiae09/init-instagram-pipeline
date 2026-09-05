@@ -145,8 +145,12 @@ def format_section(m):
                           f'<div><span>{sf["reach_med"]:,.0f}</span>median reach</div>'
                           f'<div><span>{sf["passive"]:.0f}</span>likes &amp; stickers</div>'
                           f'<div><span>{sf["shares"]:.0f}</span>shares</div>'
-                          f'<div><span>{sf["n"]}</span>collected</div></div>')
+                          f'<div><span>{sf["n"]}</span>posted</div></div>')
                 span_s = "this year" if days is None else f"the last {days} days"
+                # Say what the window actually covers, not just what was asked
+                # for — collection began mid-year, so Month and Year overlap.
+                if sf.get("truncated"):
+                    span_s += f" \u2014 all {sf['span_days']} days we hold so far"
                 body = (st + f'<p class="line"><b>Collected daily</b>, since stories '
                         f'vanish after 24 hours. Showing {span_s}.</p><ul>'
                         + "".join(f"<li>{r}</li>" for r in R.story_recommendations(sf))

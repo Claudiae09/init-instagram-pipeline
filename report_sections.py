@@ -269,17 +269,20 @@ def story_findings(csv_dir, days=None):
         if c in s.columns:
             s[c] = _pd.to_numeric(s[c], errors="coerce").fillna(0)
     s = s[s.get("reach", 0) > 0]
+    data_start = newest = requested_start = None
     if "timestamp" in s.columns and len(s):
         s = s.copy()
         s["_ts"] = _pd.to_datetime(s["timestamp"], errors="coerce", utc=True)
         s = s.dropna(subset=["_ts"])
         if len(s):
             newest = s["_ts"].max()
+            data_start = s["_ts"].min()
             if days is None:
-                start = _pd.Timestamp(year=newest.year, month=1, day=1, tz="UTC")
+                requested_start = _pd.Timestamp(year=newest.year, month=1, day=1,
+                                                tz="UTC")
             else:
-                start = newest - _pd.Timedelta(days=days)
-            s = s[s["_ts"] >= start]
+                requested_start = newest - _pd.Timedelta(days=days)
+            s = s[s["_ts"] >= requested_start]
     if len(s) < 5:
         return {"enough": False, "n": len(s), "days": days}
     total_reach = s["reach"].sum()
@@ -300,6 +303,16 @@ def story_findings(csv_dir, days=None):
                        - (s["replies"].sum() if "replies" in s else 0)
                        - (s["shares"].sum() if "shares" in s else 0)),
         "total_reach": total_reach,
+        # Daily story collection started partway through the year, so a 30-day
+        # and a year-to-date window can cover the identical set of stories.
+        # Flag that, otherwise the page looks broken when the numbers repeat.
+        "since": (f"{data_start.day} {data_start.strftime('%b %Y')}"
+                  if data_start is not None else None),
+        "span_days": (int((newest - data_start).days) + 1
+                      if data_start is not None else None),
+        "truncated": bool(data_start is not None
+                          and requested_start is not None
+                          and data_start > requested_start),
         "by_type": [],
         "thin": len(s) < 40,        # flag that this is still an early read
     }
@@ -346,7 +359,13 @@ def story_recommendations(sf):
     out.append("<i>Instagram's API doesn't expose poll votes, quiz answers or question "
                "replies — those live only in the app. The likes/sticker figure above is "
                "derived from total interactions.</i>")
-    if sf["thin"]:
+    if sf.get("truncated"):
+        out.append(
+            f"<i>Story collection began {sf['since']}, so this view holds "
+            f"{sf['span_days']} days of stories, not a full "
+            f"{'year' if sf['days'] is None else str(sf['days']) + ' days'}. "
+            f"Month and Year will read the same until more accumulate.</i>")
+    elif sf["thin"]:
         out.append(f"<i>Early read — {sf['n']} stories. Firms up as the daily job runs.</i>")
     return out
 
