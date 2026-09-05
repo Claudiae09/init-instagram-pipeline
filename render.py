@@ -647,8 +647,12 @@ def charts_section(m):
 
 
 CSS = """
-/* Light-only: the embedded Tableau views render white, so a dark page would
-   frame each one as a bright slab.
+/* Follows the system theme. The Tableau embeds do render white, but that only
+   matters inside the charts disclosure, which is closed by default and is one
+   section of seven. Keeping the other six light to protect a section most
+   visits never open is the wrong trade, so each embed gets a light well
+   instead: a pale container with its own border and a deeper shadow, which is
+   what a light surface inside a dark page is supposed to look like.
 
    Three decisions hold this sheet together:
      1. Five type sizes, assigned by role. Not by feel.
@@ -656,7 +660,7 @@ CSS = """
         caveat. Colour stopped carrying hierarchy once elevation did.
      3. Elevation is spent exactly once, on the primary card. */
 :root{
-  color-scheme:light;
+  color-scheme:light dark;
   --bg:#fff;--fg:#15181e;--muted:#5d6675;--card:#f7f8fa;
   --line:#e5e8ef;--accent:#3d6bf5;--soft:#eef2fe;--soft-line:#d6e0fc;
   --good:#12855f;--bad:#a4472e;
@@ -680,7 +684,37 @@ CSS = """
   --shadow:0 1px 2px rgba(17,21,28,.05), 0 8px 24px -12px rgba(17,21,28,.18);
   --chrome-bg:rgba(252,253,255,.72);
   --chrome-line:#e2e7f0;
+  --well:#fff;--well-line:#e5e8ef;
+  --on-accent:#fff;          /* text sitting on the accent fill */
 }
+/* One block, because the palette is fully tokenised. Nothing below this
+   references a literal colour. */
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#12151a;--fg:#e7ebf2;--muted:#98a3b5;--card:#191d24;
+    --line:#2a303a;--accent:#6f92ff;--soft:#1b2233;--soft-line:#2f3a52;
+    --good:#3fbe8f;--bad:#e2795c;
+    --warn-bg:#2a2116;--warn-line:#4a3b23;--warn-bar:#c68a34;--warn-fg:#f0d9b4;
+    --chrome-bg:rgba(18,21,26,.72);
+    --chrome-line:#2a303a;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 16px 40px -24px rgba(0,0,0,.85);
+    /* The well the Tableau embeds sit in. */
+    --well:#f7f8fa;--well-line:#3a4250;
+    /* The dark accent is light, so white on it would not carry. */
+    --on-accent:#0f1626;
+  }
+  .banner b{filter:none}
+  .chrome{box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+  .spark .gd circle{fill:var(--card)}
+  tr.crow.me td{background:var(--soft)}
+  /* A light island: pale fill, its own edge, and a heavier shadow because a
+     bigger surface should read as thicker. */
+  .viz{background:var(--well);border-color:var(--well-line);
+       box-shadow:0 2px 4px rgba(0,0,0,.35),0 20px 44px -26px rgba(0,0,0,.9)}
+  .viz-fb{background:var(--well);color:#15181e}
+  .viz-fb .vs{color:#5d6675}
+}
+
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--fg);
@@ -747,7 +781,7 @@ padding:clamp(18px,2.5vw,24px)}
 
 /* ── surface 1: the answer. The only raised thing on the page. ───────────── */
 .decision{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
-box-shadow:var(--shadow);padding:clamp(20px,3.5vw,28px);margin:0}
+box-shadow:var(--shadow);padding:clamp(20px,3.5vw,28px);margin:0 0 22px}
 .decision-head{display:flex;flex-wrap:wrap;gap:12px;align-items:center;
 justify-content:space-between;margin-bottom:16px}
 .decision ol{margin:0;padding-left:20px}
@@ -770,7 +804,7 @@ border-left:4px solid var(--warn-bar);border-radius:var(--r-sm);
 color:var(--warn-fg);font-size:var(--fs-small);line-height:1.55}
 .banner{padding:12px 14px;margin:0 0 16px}
 .note{padding:10px 12px;margin:10px 0}
-.banner b{color:#5a3d0d}
+.banner b{color:var(--warn-fg);filter:brightness(.82)}
 
 /* ── controls ───────────────────────────────────────────────────────────── */
 .segs{position:relative;display:inline-flex;background:var(--card);
@@ -781,7 +815,10 @@ border-radius:calc(var(--r-sm) - 2px);background:var(--accent);
 pointer-events:none;opacity:0;will-change:transform,width}
 .segs.ready .segpill{opacity:1}
 .segs.dragging{cursor:grabbing}
-.seg{border:0;background:none;font:inherit;font-size:var(--fs-small);font-weight:600;
+/* The pill is absolutely positioned, so it paints above static siblings
+   whatever the source order. The labels have to be lifted over it. */
+.seg{position:relative;z-index:1;
+border:0;background:none;font:inherit;font-size:var(--fs-small);font-weight:600;
 color:var(--muted);padding:11px 14px;min-height:44px;
 border-radius:calc(var(--r-sm) - 2px);cursor:pointer;
 transition:background .15s ease,color .15s ease,transform .1s ease}
@@ -791,7 +828,7 @@ transition:background .15s ease,color .15s ease,transform .1s ease}
 a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);
 outline-offset:3px;border-radius:4px}
 /* The pill is the selection now, so the button only changes colour. */
-.seg.is-on{color:#fff}
+.seg.is-on{color:var(--on-accent)}
 
 /* A stage owns its height so the column below it does not jolt on a switch. */
 .stage{position:relative}
@@ -938,7 +975,7 @@ padding:20px;transition:opacity .3s ease;background:var(--card)}
 .vs{font-size:var(--fs-micro);color:var(--muted)}
 .viz.is-dead .vs{color:var(--bad)}
 .explore{display:inline-block;margin:18px 0 22px;padding:13px 20px;
-border-radius:var(--r-sm);background:var(--accent);color:#fff;text-decoration:none;
+border-radius:var(--r-sm);background:var(--accent);color:var(--on-accent);text-decoration:none;
 font-size:var(--fs-small);font-weight:600;min-height:44px;
 transition:filter .15s ease,transform .1s ease}
 .explore:hover{filter:brightness(1.07)}.explore:active{transform:scale(.97)}
@@ -966,6 +1003,21 @@ color:var(--muted);font-size:var(--fs-small)}
   .growth{grid-template-columns:1fr;gap:14px}
   .gnums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
   .gnums div{margin:0}
+}
+
+/* Dark component overrides live at the end on purpose. They target the same
+   single-class selectors as the light rules above, so source order decides
+   which wins; declared earlier they silently lost. */
+@media (prefers-color-scheme:dark){
+  .banner b{filter:none}
+  .chrome{box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+  .spark .gd circle{fill:var(--card)}
+  /* A light island for each embed: pale fill, its own edge, and a heavier
+     shadow, because a bigger surface should read as thicker. */
+  .viz{background:var(--well);border-color:var(--well-line);
+  box-shadow:0 2px 4px rgba(0,0,0,.35),0 20px 44px -26px rgba(0,0,0,.9)}
+  .viz-fb{background:var(--well);color:#15181e}
+  .viz-fb .vs{color:#5d6675}
 }
 """
 
@@ -1374,13 +1426,16 @@ def build(m):
          kpi_panes(m),
          guidance_card(m),
          format_section(m),
-         '<div class="grid">',
+         # Full width, not raised beside a flat panel of the same size. Its
+         # rank is that it is the answer, and width says that structurally
+         # where a shadow was only saying it tonally.
          decision_card(m),
-         audience_section("growth"),
+         '<div class="grid">',
          topic_section(m),
+         audience_section("growth"),
          audience_section("who"),
-         "</div>",
          competitor_section(m),
+         "</div>",
          charts_section(m),
          # Build stamp so it is obvious at a glance whether the deployed page
          # is the current one. Without it, a stale deploy is indistinguishable
