@@ -92,6 +92,24 @@ def best_slots(m, min_posts=3, top=5):
     return [(w, int(h), int(r["med"]), int(r["n"])) for (w, h), r in g.iterrows()]
 
 
+
+def fmt_val(v):
+    """2831.0 -> '2,831'; 8.778 -> '8.8'. Integers never show a decimal."""
+    return f"{v:,.0f}" if abs(v - round(v)) < 1e-9 and abs(v) >= 100 else f"{v:,.1f}"
+
+
+def nice_max(v):
+    """Round an axis maximum up to a human number (1k, 2.5k, 3k) not 3341."""
+    if v <= 0:
+        return 1
+    import math
+    mag = 10 ** math.floor(math.log10(v))
+    for step in (1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10):
+        if v <= step * mag:
+            return step * mag
+    return 10 * mag
+
+
 # ── tiny SVG chart helpers (no libraries, theme-safe) ───────────────────────
 def svg_open(w, h, extra=""):
     return (f'<svg viewBox="0 0 {w} {h}" width="100%" height="auto" '
@@ -102,7 +120,7 @@ def bar_chart(labels, values, colors, unit="", w=680, h=260):
     if not values:
         return "<p class='muted'>No data.</p>"
     pad_l, pad_b, pad_t = 54, 42, 14
-    mx = max(values) * 1.18 or 1
+    mx = nice_max(max(values))
     bw = (w - pad_l - 16) / len(values)
     s = [svg_open(w, h)]
     for i in range(5):                                     # gridlines
@@ -111,7 +129,7 @@ def bar_chart(labels, values, colors, unit="", w=680, h=260):
         s.append(f'<line x1="{pad_l}" y1="{y:.0f}" x2="{w-8}" y2="{y:.0f}" '
                  f'stroke="{C["grid"]}" stroke-width="1" opacity=".35"/>')
         s.append(f'<text x="{pad_l-8}" y="{y+4:.0f}" text-anchor="end" '
-                 f'class="ax">{val:.0f}</text>')
+                 f'class="ax">{fmt_val(val)}</text>')
     for i, (lab, v, col) in enumerate(zip(labels, values, colors)):
         bh = (h - pad_t - pad_b) * (v / mx)
         x = pad_l + i * bw + bw * 0.18
@@ -119,7 +137,7 @@ def bar_chart(labels, values, colors, unit="", w=680, h=260):
         s.append(f'<rect x="{x:.0f}" y="{y:.0f}" width="{bw*0.64:.0f}" '
                  f'height="{bh:.0f}" rx="4" fill="{col}"/>')
         s.append(f'<text x="{x+bw*0.32:.0f}" y="{y-6:.0f}" text-anchor="middle" '
-                 f'class="val">{v:.1f}{unit}</text>')
+                 f'class="val">{fmt_val(v)}{unit}</text>')
         s.append(f'<text x="{x+bw*0.32:.0f}" y="{h-pad_b+18:.0f}" '
                  f'text-anchor="middle" class="ax">{html.escape(str(lab))}</text>')
     s.append("</svg>")
@@ -131,7 +149,7 @@ def line_chart(labels, values, w=680, h=250, color=None, unit=""):
         return "<p class='muted'>Not enough data yet.</p>"
     color = color or C["accent"]
     pad_l, pad_b, pad_t = 54, 42, 14
-    mx, mn = max(values) * 1.15, 0
+    mx, mn = nice_max(max(values)), 0
     iw, ih = w - pad_l - 16, h - pad_t - pad_b
     pts = [(pad_l + iw * i / (len(values) - 1),
             pad_t + ih * (1 - (v - mn) / (mx - mn or 1))) for i, v in enumerate(values)]
@@ -262,18 +280,23 @@ def build_tldr(m, types, mon, slots):
         if abs(ch) >= 12:
             direction = "up" if ch > 0 else "down"
             recs.append(
-                f"<b>Reach is trending {direction} {abs(ch):.0f}%.</b> Median reach per post "
-                f"over the last 3 months is <b>{recent:,.0f}</b>, against {prior:,.0f} in the "
-                f"3 months before. " + ("Keep doing what changed." if ch > 0 else
-                "Worth reviewing what shifted — content mix, timing, or posting frequency."))
+                f"<b>Reach is trending {direction} {abs(ch):.0f}% over 3 months.</b> Median "
+                f"reach per post for the last 3 months is <b>{recent:,.0f}</b>, against "
+                f"{prior:,.0f} in the 3 months before. " +
+                ("Keep doing what changed." if ch > 0 else
+                 "Worth reviewing what shifted — content mix, timing, or posting frequency.") +
+                " <i>(3-month window — the month-by-month chart below can move differently.)</i>")
 
     if len(mon) >= 6:
         hi = mon.loc[mon["posts"].idxmax()]
-        if hi["er"] < mon["er"].median():
+        med_er = mon["er"].median()
+        # Only claim a gap if the two numbers actually differ once rounded to the
+        # precision we print — otherwise it reads "fell to 5.7%, below 5.7%".
+        if round(hi["er"], 1) < round(med_er, 1):
             recs.append(
                 f"<b>More posts didn't mean more engagement.</b> {hi['month']} was your "
                 f"heaviest month (<b>{int(hi['posts'])} posts</b>) but engagement fell to "
-                f"{hi['er']:.1f}%, below the {mon['er'].median():.1f}% typical month. "
+                f"{hi['er']:.1f}%, below the {med_er:.1f}% typical month. "
                 f"Volume alone isn't working — quality per post matters more.")
 
     if slots:
@@ -306,7 +329,7 @@ color:var(--muted);font-weight:600}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;
 padding:18px;margin:14px 0 0;overflow-x:auto}
 .viz{margin:14px 0 0;border:1px solid var(--line);border-radius:10px;overflow:hidden;
-background:#fff}
+background:var(--card)}
 .viz iframe{width:100%;border:0;display:block}
 .explore{display:inline-block;margin:10px 0 0;padding:9px 16px;border-radius:8px;
 background:var(--accent);color:#fff;text-decoration:none;font-size:.9rem;font-weight:600}
@@ -371,7 +394,10 @@ def build(m):
         f"a share puts your post in front of someone who doesn't follow you. "
         f"<b>{types[0]['type']}s lead at {types[0]['share_1k']:.1f}</b>, "
         f"{types[-1]['type']}s trail at {types[-1]['share_1k']:.1f}. "
-        f"Higher bar = better at reaching new people.",
+        f"Higher bar = better at reaching new people. "
+        f"<b>These figures cover all {len(m):,} posts</b> — the embedded chart may be "
+        f"filtered to the current year, where a single high-performing post can flip the "
+        f"ranking. Judge formats on the full history.",
         rec=f"Shift your posting mix toward <b>{types[0]['type']}s</b>. If you make one "
             f"change this week, make it this one — they spread "
             f"{types[0]['share_1k']/types[-1]['share_1k']:.1f}× better than "
@@ -385,10 +411,15 @@ def build(m):
         f"post can't distort the trend. Latest month: "
         f"<b>{mon.iloc[-1]['reach_med']:,.0f}</b> per post. "
         f"Rising = your content is escaping your existing follower base.",
-        rec=("Reach is holding or climbing — keep the current content mix and posting "
-             "rhythm." if mon.iloc[-1]["reach_med"] >= mon["reach_med"].median() else
-             "Reach has dipped below your typical month. Look at what changed — format "
-             "mix, posting times, or a gap in posting — and correct it before it compounds.")))
+        rec=(f"The most recent month ({mon.iloc[-1]['reach_med']:,.0f}) is "
+             + ("at or above" if mon.iloc[-1]["reach_med"] >= mon["reach_med"].median()
+                else "below")
+             + f" your typical month ({mon['reach_med'].median():,.0f}). "
+             + ("Keep the current mix and rhythm."
+                if mon.iloc[-1]["reach_med"] >= mon["reach_med"].median() else
+                "Review what changed — format mix, posting times, or a posting gap.")
+             + " <i>(single-month comparison; the 3-month trend above answers a different "
+               "question and can point the other way.)</i>")))
 
     # 3. volume vs ER
     P.append(section(
@@ -513,8 +544,13 @@ def build(m):
              f"data through {newest:%B %d, %Y} · page built {today:%B %d, %Y}. "
              f"No manual steps — this refreshes every week.</footer></div>")
 
-    return ("<title>INIT FIU · Instagram performance</title>"
-            f"<style>{CSS}</style>" + "".join(P))
+    # Full document. charset MUST come first or every '·' and '–' renders as
+    # mojibake; viewport is required or the page is unusable on phones.
+    return ("<!doctype html><html lang=\"en\"><head>"
+            "<meta charset=\"utf-8\">"
+            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+            "<title>INIT FIU · Instagram performance</title>"
+            f"<style>{CSS}</style></head><body>" + "".join(P) + "</body></html>")
 
 
 def main():
