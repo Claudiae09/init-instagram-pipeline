@@ -374,6 +374,7 @@ ul.weak li{margin:0 0 6px}
 .dim{color:var(--muted);font-size:.85em}
 .note{background:#fff8e6;border:1px solid #f0e0b8;border-radius:8px;padding:9px 12px;
 margin:10px 0;font-size:.87rem;color:#6b5518}
+.build{opacity:.75;font-size:.92em}
 .allhist{color:var(--muted);font-size:.82rem;margin:10px 0 0;font-style:italic}
 .cwhat{color:var(--muted);font-size:.87rem;margin:0 0 6px;line-height:1.55}
 .csays{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);
@@ -479,8 +480,13 @@ def build(m):
          topic_section(m),
          format_section(m),
          charts_section(m),
+         # Build stamp so it is obvious at a glance whether the deployed page
+         # is the current one. Without it, a stale deploy is indistinguishable
+         # from a bug in the page itself.
          f'<footer>Generated from the Instagram API. Data through '
-         f'{newest:%B %d, %Y}; the page rebuilds itself every week.</footer>',
+         f'{newest:%B %d, %Y}; the page rebuilds itself every week.<br>'
+         f'<span class="build">Page built '
+         f'{dt.datetime.now():%d %b %Y, %H:%M} local</span></footer>',
          "</div>"]
     return ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
