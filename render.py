@@ -137,15 +137,16 @@ def format_section(m):
         for pkey, plabel, days, _prior in PERIODS:
             show = " is-on" if (j == 0 and pkey == "month") else ""
             if fmt is None:                                   # Stories pane
-                sf = R.story_findings(CSV)
+                sf = R.story_findings(CSV, days)
                 st = ""
                 if sf.get("enough"):
                     st = (f'<div class="stats">'
                           f'<div><span>{sf["completion"]:.0f}%</span>watch through</div>'
                           f'<div><span>{sf["reach_med"]:,.0f}</span>median reach</div>'
                           f'<div><span>{sf["n"]}</span>collected</div></div>')
-                body = (st + '<p class="line"><b>Collected daily</b>, since stories '
-                        'vanish after 24 hours.</p><ul>'
+                span_s = "this year" if days is None else f"the last {days} days"
+                body = (st + f'<p class="line"><b>Collected daily</b>, since stories '
+                        f'vanish after 24 hours. Showing {span_s}.</p><ul>'
                         + "".join(f"<li>{r}</li>" for r in R.story_recommendations(sf))
                         + "</ul>")
                 panes.append(f'<div class="pane{show}" id="f-{pkey}-{j}" '

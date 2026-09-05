@@ -252,8 +252,12 @@ def caption_recommendations(cf):
 
 
 # ── stories ─────────────────────────────────────────────────────────────────
-def story_findings(csv_dir):
-    """Story completion and interaction. Honest about small samples."""
+def story_findings(csv_dir, days=None):
+    """Story completion and interaction, optionally scoped to a period.
+
+    `days=None` means this calendar year; an integer means the last N days.
+    Windowing uses the stories' own timestamps, which run ahead of the media
+    pull because stories are collected daily."""
     import pandas as _pd
     p = csv_dir / "stories.csv"
     if not p.exists():
@@ -264,11 +268,22 @@ def story_findings(csv_dir):
         if c in s.columns:
             s[c] = _pd.to_numeric(s[c], errors="coerce").fillna(0)
     s = s[s.get("reach", 0) > 0]
+    if "timestamp" in s.columns and len(s):
+        s = s.copy()
+        s["_ts"] = _pd.to_datetime(s["timestamp"], errors="coerce", utc=True)
+        s = s.dropna(subset=["_ts"])
+        if len(s):
+            newest = s["_ts"].max()
+            if days is None:
+                start = _pd.Timestamp(year=newest.year, month=1, day=1, tz="UTC")
+            else:
+                start = newest - _pd.Timedelta(days=days)
+            s = s[s["_ts"] >= start]
     if len(s) < 5:
-        return {"enough": False, "n": len(s)}
+        return {"enough": False, "n": len(s), "days": days}
     total_reach = s["reach"].sum()
     out = {
-        "enough": True, "n": len(s),
+        "enough": True, "n": len(s), "days": days,
         "reach_med": s["reach"].median(),
         "completion": (1 - s["nav_tap_exit"].sum() / total_reach) * 100,
         "replies_per_1k": s["replies"].sum() / total_reach * 1000,
