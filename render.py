@@ -73,6 +73,38 @@ def hour_label(h):
 
 
 # ── page pieces ─────────────────────────────────────────────────────────────
+def kpi_strip(m):
+    """The four numbers someone opens a dashboard to see, before any prose."""
+    g = AU.follower_growth(CSV)
+    cur = R.window(m, 30)
+    prev = R.window(m, 30, offset=30)
+    tiles = []
+
+    if g.get("enough"):
+        up = g["change"] >= 0
+        tiles.append(("Followers", f"{g['current']:,.0f}",
+                      f"{g['change']:+,.0f} in {g['days']} days",
+                      "up" if up else "down"))
+    if len(cur):
+        now, before = R.rate(cur, "shares"), R.rate(prev, "shares")
+        ch = R.pct_change(before, now)
+        tiles.append(("Shares per 1k", f"{now:.1f}",
+                      (f"{ch:+.0f}% vs previous 30 days" if len(prev) else
+                       "last 30 days"),
+                      "up" if ch >= 0 else "down"))
+        tiles.append(("Median reach", f"{cur['reach'].median():,.0f}",
+                      "per post, last 30 days", ""))
+        tiles.append(("Posts", f"{len(cur)}", "in the last 30 days", ""))
+    if not tiles:
+        return ""
+    cells = "".join(
+        f'<div class="kpi"><span class="kl">{esc(label)}</span>'
+        f'<span class="kv">{esc(value)}</span>'
+        f'<span class="kd {cls}">{esc(delta)}</span></div>'
+        for label, value, delta, cls in tiles)
+    return f'<div class="kpis">{cells}</div>'
+
+
 def decision_card(m):
     """The one thing at the top: recommendations, switchable by period."""
     tabs, panes = [], []
@@ -348,7 +380,7 @@ def topic_section(m):
                  '<th class="n">Shares / 1k</th><th class="n">vs avg</th>'
                  '<th class="n">Last 30d</th></tr></thead>'
                  f'<tbody>{rows}</tbody></table></div>')
-    return ('<section class="block"><h2>What to post next</h2>'
+    return ('<section class="block panel"><h2>What to post next</h2>'
             '<p class="sub2">Ranked by what your own audience shares, since '
             'Instagram publishes nothing about what is trending.</p>'
             f'<ul class="csays">{bullets}</ul>{table}</section>')
@@ -383,8 +415,12 @@ def growth_chart(g, w=600, h=130, pad=10):
         f'<span>{g["until"]:%d %b}</span></div>')
 
 
-def audience_section():
-    """Who follows the account. The only part of the page not about posts."""
+def audience_section(part):
+    """Who follows the account. The only part of the page not about posts.
+
+    Returns one panel at a time so the dashboard grid can pair each with a
+    section of matching height instead of leaving a column empty.
+    """
     af = AU.audience_findings(CSV)
     if not af.get("enough"):
         return ""
@@ -417,11 +453,12 @@ def audience_section():
             + '<ul class="csays">'
             + "".join(f"<li>{n}</li>" for n in AU.growth_note(g)) + "</ul>")
 
-    return ('<section class="block"><h2>Followers</h2>'
-            '<p class="sub2">How the audience is growing, and who is in it. '
-            'Refreshed daily.</p>'
-            + growth
-            + '<h3>Age of your followers</h3>'
+    if part == "growth":
+        return ('<section class="block panel"><h2>Followers</h2>'
+                '<p class="sub2">How the audience is growing. Refreshed '
+                'daily.</p>' + growth + '</section>')
+    return ('<section class="block panel"><h2>Who they are</h2>'
+            '<p class="sub2">Instagram reports this for followers only.</p>'
             + bars
             + '<ul class="csays">'
             + "".join(f"<li>{b}</li>" for b in AU.audience_recommendations(af))
@@ -487,7 +524,7 @@ CSS = """
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--fg);
 font:var(--fs-body)/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif}
-.wrap{max-width:820px;margin:0 auto;padding:clamp(28px,5vw,52px) clamp(16px,4vw,24px) 80px}
+.wrap{max-width:1120px;margin:0 auto;padding:clamp(28px,5vw,52px) clamp(16px,4vw,24px) 80px}
 
 h1{font-size:clamp(25px,4.4vw,var(--fs-title));line-height:1.14;margin:0 0 6px;
 letter-spacing:-.02em}
@@ -496,9 +533,30 @@ h3{font-size:var(--fs-small);margin:26px 0 8px;color:var(--muted);font-weight:60
 .sub{color:var(--muted);margin:0 0 30px;font-size:var(--fs-small)}
 .sub2{color:var(--muted);margin:6px 0 14px;font-size:var(--fs-small)}
 
+/* ── dashboard layout ───────────────────────────────────────────────────── */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+gap:12px;margin:0 0 22px}
+.kpi{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
+box-shadow:var(--shadow);padding:16px 18px;display:flex;flex-direction:column;gap:2px}
+.kl{font-size:var(--fs-micro);color:var(--muted);font-weight:600;
+letter-spacing:.02em;text-transform:uppercase}
+.kv{font-size:var(--fs-title);font-weight:700;letter-spacing:-.03em;line-height:1.05;
+font-variant-numeric:tabular-nums}
+.kd{font-size:var(--fs-micro);color:var(--muted)}
+.kd.up{color:var(--good);font-weight:600}
+.kd.down{color:var(--bad);font-weight:600}
+
+/* Two columns on a real screen, stacked on a phone. The point of a dashboard
+   is seeing more than one thing at once. */
+.grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);
+gap:20px;align-items:start;margin:0 0 22px}
+.grid > *{margin:0}
+.panel{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
+box-shadow:var(--shadow);padding:clamp(18px,2.5vw,24px)}
+
 /* ── surface 1: the answer. The only raised thing on the page. ───────────── */
 .decision{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
-box-shadow:var(--shadow);padding:clamp(20px,3.5vw,28px);margin:0 0 34px}
+box-shadow:var(--shadow);padding:clamp(20px,3.5vw,28px);margin:0}
 .decision-head{display:flex;flex-wrap:wrap;gap:12px;align-items:center;
 justify-content:space-between;margin-bottom:16px}
 .decision ol{margin:0;padding-left:20px}
@@ -644,8 +702,14 @@ a{color:var(--accent)}
 footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);
 color:var(--muted);font-size:var(--fs-small)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr}
+}
 @media (max-width:520px){
   .decision-head{flex-direction:column;align-items:flex-start}
+  .kpis{grid-template-columns:repeat(2,1fr);gap:10px}
+  .kpi{padding:13px 14px}
+  .kv{font-size:var(--fs-lead)}
   .growth{grid-template-columns:1fr;gap:14px}
   .gnums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
   .gnums div{margin:0}
@@ -715,10 +779,14 @@ def build(m):
          "<h1>INIT FIU · Instagram</h1>",
          f'<p class="sub">Updated automatically · {len(m):,} posts analysed · '
          f'latest post {newest:%b %d, %Y}</p>',
+         kpi_strip(m),
+         '<div class="grid">',
          decision_card(m),
+         audience_section("growth"),
          topic_section(m),
+         audience_section("who"),
+         "</div>",
          format_section(m),
-         audience_section(),
          charts_section(m),
          # Build stamp so it is obvious at a glance whether the deployed page
          # is the current one. Without it, a stale deploy is indistinguishable
