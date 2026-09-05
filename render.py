@@ -19,6 +19,7 @@ import pandas as pd
 
 import audience as AU
 import timing as TM
+import video as VD
 import chart_notes as CN
 import competitors as CP
 import report_sections as R
@@ -83,6 +84,29 @@ def kpi_panes(m):
         out.append(f'<div class="pane{on}" id="k-{key}" role="tabpanel" '
                    f'aria-labelledby="t-{key}">{kpi_strip(m, days, label)}</div>')
     return f'<div class="stage" data-stage="k">{"".join(out)}</div>'
+
+
+def video_section(m):
+    """Reels people stopped watching soonest. Seconds, never a percentage."""
+    vf = VD.video_findings(m)
+    if not vf.get("enough"):
+        return ""
+    rows = "".join(
+        f'<tr><td><a class="tlink" href="{esc(r["link"])}" target="_blank" '
+        f'rel="noopener">{esc(r["caption"])}</a></td>'
+        f'<td class="n">{r["watched"]:.1f}s</td>'
+        f'<td class="n">{r["reach"]:,.0f}</td>'
+        f'<td class="n down">{r["vs_median"]:+.1f}s</td></tr>'
+        for r in vf["rows"])
+    return ('<section class="block panel"><h2>Reels people leave soonest</h2>'
+            '<p class="sub2">Ranked by how long the average viewer stayed. '
+            'Each links to the reel.</p>'
+            '<ul class="csays">'
+            + "".join(f"<li>{n}</li>" for n in VD.video_note(vf)) + "</ul>"
+            '<div class="tw"><table class="topics compact"><thead><tr>'
+            '<th>Reel</th><th class="n">Watched</th><th class="n">Reach</th>'
+            '<th class="n">vs median</th></tr></thead>'
+            f'<tbody>{rows}</tbody></table></div></section>')
 
 
 def competitor_section(m):
@@ -1476,6 +1500,7 @@ def build(m):
          audience_section("growth"),
          audience_section("who"),
          competitor_section(m),
+         video_section(m),
          "</div>",
          charts_section(m),
          # The build stamp stays, quietly. Without it a stale deploy is
