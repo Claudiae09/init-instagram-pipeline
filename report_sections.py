@@ -94,8 +94,7 @@ def period_recommendations(p):
             f"{p['share_1k']:.1f} shares per 1,000 reached, against "
             f"{p['prev_share_1k']:.1f} before. "
             + ("Whatever changed, keep doing it." if up else
-               "This is the number that grows you, so it is worth looking into "
-               "before it settles in."))
+               "Worth looking into before it settles in."))
     # 2. format leader in this window
     if p["formats"]:
         top = p["formats"][0]
@@ -117,8 +116,7 @@ def period_recommendations(p):
         out.append(
             f"<b>You posted more but engaged less.</b> {p['posts']} posts against "
             f"{p['prev_posts']}, yet engagement fell from {p['prev_er']:.1f}% to "
-            f"{p['er']:.1f}%. Posting more is not the lever here. Fewer, stronger "
-            f"posts will do better than filling the calendar.")
+            f"{p['er']:.1f}%. Fewer, stronger posts beat filling the calendar.")
     if not out:
         out.append(f"<b>Steady {p['label'].lower()}.</b> {p['posts']} posts, "
                    f"{p['share_1k']:.1f} shares per 1,000 reached, median reach "
@@ -237,8 +235,7 @@ def caption_recommendations(cf):
                 f"<b>Write longer captions.</b> Posts with <b>{best['name']} characters</b> "
                 f"get {best['share_1k']:.1f} shares per 1,000 reached, against "
                 f"{worst['share_1k']:.1f} for {worst['name']}. "
-                f"Give people the context. It gets shared more than a one-liner "
-                f"does, so write the fuller version.")
+                f"Give people the context.")
     for t in cf["traits"][:3]:
         if abs(t["lift"]) < 15:
             continue
@@ -368,22 +365,20 @@ def story_recommendations(sf):
         out.append(
             f"<b>Engagement is passive.</b> Of {sf['interactions']:.0f} interactions, "
             f"about {sf['passive']:.0f} are likes or sticker taps, {sf['shares']:.0f} are "
-            f"shares and {sf['replies']:.0f} are replies. People react but they do "
-            f"not write back. A poll or question sticker is what turns a tap into "
-            f"an actual conversation, so it is worth adding one to your regulars.")
+            f"shares and {sf['replies']:.0f} are replies. Add a poll or question "
+            f"sticker to turn taps into actual replies.")
 
     # conversion: does any of this reach go anywhere?
     if sf.get("total_reach"):
         out.append(
             f"<b>Stories aren't converting.</b> {sf['total_reach']:,.0f} people reached "
             f"produced {sf['profile_visits']:.0f} profile visits and "
-            f"{sf['follows']:.0f} follows. If stories are meant to grow you, they need an "
-            f"explicit next step, like a link sticker or a line saying 'tap the "
-            f"profile to sign up'.")
+            f"{sf['follows']:.0f} follows. Add a link sticker or a "
+            f"'tap the profile' line.")
 
-    out.append("<i>Instagram's API doesn't expose poll votes, quiz answers or question "
-               "replies. Those live only in the Instagram app. The likes and "
-               "stickers figure above is worked out from total interactions.</i>")
+    out.append("<i>Poll votes, quiz answers and question replies are app-only, so "
+               "the API cannot see them. The likes and stickers figure is "
+               "worked out from total interactions.</i>")
     if sf.get("truncated"):
         pass                      # covered by the banner at the top of the pane
     elif sf["thin"]:
@@ -462,14 +457,13 @@ def diagnosis_text(dg):
         out.append(
             f"<b>It was not how much you posted, it was which posts.</b> "
             f"{dg['strong_n']} post{'s' if dg['strong_n'] != 1 else ''} did well while "
-            f"{dg['weak_n']} landed under half the average. The gap between your best and "
-            f"worst post this period is far bigger than the gap between periods.")
+            f"{dg['weak_n']} landed under half the average. The spread between your "
+            f"own posts is wider than the change between periods.")
     if not hurt and dg.get("spread"):
         out.append(
-            "<b>Format, timing and caption length don't separate the winners from the "
-            "losers here</b>, so the difference is the content itself: the subject, the "
-            "hook, the visual. Open the weak posts below and compare them to your best "
-            "performer for that format.")
+            "<b>Format, timing and caption length don't separate the winners from "
+            "the losers here.</b> The difference is the content itself: subject, "
+            "hook, visual. Compare the weak posts below against your best.")
     return out
 
 
