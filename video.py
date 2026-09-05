@@ -14,15 +14,21 @@ sixty, because the opening is where attention is won or lost. It is reported in
 seconds and never as a percentage, because a percentage would be inventing the
 denominator.
 """
+import datetime as dt
+
 import pandas as pd
 
 MIN_REACH = 200      # below this the average is a handful of people
 SHOW = 8
 
 
-def video_findings(m, since_year=2025):
+def video_findings(m, year=None):
+    """Scoped to the calendar year. A reel from last year is not a useful
+    example of what is losing people this semester, and the reels the org
+    makes now are not the reels it made then."""
+    year = year or dt.date.today().year
     r = m[(m["post_type"] == "IG reel")
-          & (m["d"].dt.year >= since_year)
+          & (m["d"].dt.year == year)
           & m["avg_watch_time_sec"].notna()
           & (m["avg_watch_time_sec"] > 0)].copy()
     r = r[r["reach"] >= MIN_REACH]
@@ -40,7 +46,8 @@ def video_findings(m, since_year=2025):
             "reach": float(x["reach"]),
             "vs_median": float(x["avg_watch_time_sec"]) - med,
         })
-    return {"enough": True, "rows": rows, "median": med, "reels": len(r)}
+    return {"enough": True, "rows": rows, "median": med, "reels": len(r),
+            "year": year}
 
 
 def video_note(vf):
@@ -48,9 +55,9 @@ def video_note(vf):
         return ["Not enough reels with watch-time data yet."]
     rows = vf["rows"]
     worst = rows[0]
-    out = [f"<b>A typical reel holds {vf['median']:.1f} seconds</b> across "
-           f"{vf['reels']} reels. The ones below are the eight that lost people "
-           f"fastest, the weakest at {worst['watched']:.1f} seconds."]
+    out = [f"<b>A typical reel holds {vf['median']:.1f} seconds</b> across the "
+           f"{vf['reels']} you posted in {vf['year']}. The ones below lost "
+           f"people fastest, the weakest at {worst['watched']:.1f} seconds."]
     reachy = [r for r in rows if r["reach"] >= 1500]
     if reachy:
         out.append(f"<b>{len(reachy)} of these still reached 1,500 or more</b>, "

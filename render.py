@@ -99,8 +99,8 @@ def video_section(m):
         f'<td class="n down">{r["vs_median"]:+.1f}s</td></tr>'
         for r in vf["rows"])
     return ('<section class="block panel"><h2>Reels people leave soonest</h2>'
-            '<p class="sub2">Ranked by how long the average viewer stayed. '
-            'Each links to the reel.</p>'
+            f'<p class="sub2">Ranked by how long the average viewer stayed. '
+            f'{vf["year"]} reels only. Each links to the reel.</p>'
             '<ul class="csays">'
             + "".join(f"<li>{n}</li>" for n in VD.video_note(vf)) + "</ul>"
             '<div class="tw"><table class="topics compact"><thead><tr>'
