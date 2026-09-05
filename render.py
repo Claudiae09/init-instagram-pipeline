@@ -142,6 +142,21 @@ def format_section(m):
             + "".join(panes) + "</section>")
 
 
+def stories_section():
+    sf = R.story_findings(CSV)
+    recs = R.story_recommendations(sf)
+    stats = ""
+    if sf.get("enough"):
+        stats = (f'<div class="stats">'
+                 f'<div><span>{sf["completion"]:.0f}%</span>watch through</div>'
+                 f'<div><span>{sf["reach_med"]:,.0f}</span>median reach</div>'
+                 f'<div><span>{sf["n"]}</span>stories captured</div></div>')
+    return ('<section class="block"><h2>Stories</h2>'
+            '<p class="sub2">Collected daily, since stories disappear after 24 hours.</p>'
+            + stats + "<ul>"
+            + "".join(f"<li>{r}</li>" for r in recs) + "</ul></section>")
+
+
 def charts_section():
     items = []
     for title, sheet in CHARTS:
@@ -260,6 +275,7 @@ def build(m):
          f'latest post {newest:%b %d, %Y}</p>',
          decision_card(m),
          format_section(m),
+         stories_section(),
          charts_section(),
          f'<footer>Generated from the Instagram API. Data through '
          f'{newest:%B %d, %Y}; the page rebuilds itself every week.</footer>',

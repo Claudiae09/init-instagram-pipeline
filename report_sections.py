@@ -214,3 +214,63 @@ def caption_recommendations(cf):
     if not out:
         out.append("No caption pattern stands out strongly enough to act on yet.")
     return out
+
+
+# ── stories ─────────────────────────────────────────────────────────────────
+def story_findings(csv_dir):
+    """Story completion and interaction. Honest about small samples."""
+    import pandas as _pd
+    p = csv_dir / "stories.csv"
+    if not p.exists():
+        return {"enough": False, "n": 0}
+    s = _pd.read_csv(p)
+    for c in ["reach", "replies", "shares", "nav_tap_exit", "nav_tap_forward",
+              "nav_tap_back", "nav_swipe_forward"]:
+        if c in s.columns:
+            s[c] = _pd.to_numeric(s[c], errors="coerce").fillna(0)
+    s = s[s.get("reach", 0) > 0]
+    if len(s) < 5:
+        return {"enough": False, "n": len(s)}
+    total_reach = s["reach"].sum()
+    out = {
+        "enough": True, "n": len(s),
+        "reach_med": s["reach"].median(),
+        "completion": (1 - s["nav_tap_exit"].sum() / total_reach) * 100,
+        "replies_per_1k": s["replies"].sum() / total_reach * 1000,
+        "by_type": [],
+        "thin": len(s) < 40,        # flag that this is still an early read
+    }
+    for t, g in s.groupby("media_type"):
+        if len(g) >= 3:
+            out["by_type"].append({
+                "type": t.title(), "n": len(g),
+                "completion": (1 - g["nav_tap_exit"].sum() / g["reach"].sum()) * 100,
+                "reach_med": g["reach"].median()})
+    out["by_type"].sort(key=lambda x: -x["completion"])
+    return out
+
+
+def story_recommendations(sf):
+    if not sf.get("enough"):
+        return [f"Only {sf.get('n', 0)} stories captured so far. The daily job collects "
+                f"them from now on — check back in a few weeks."]
+    out = [f"<b>{sf['completion']:.0f}% of viewers watch your stories through</b> "
+           f"rather than tapping away, on a median reach of {sf['reach_med']:,.0f}. "
+           f"Anything above roughly 70% is healthy."]
+    bt = sf["by_type"]
+    if len(bt) >= 2 and (bt[0]["completion"] - bt[-1]["completion"]) >= 5:
+        out.append(
+            f"<b>{bt[0]['type']} stories hold attention better</b> — "
+            f"{bt[0]['completion']:.0f}% completion against {bt[-1]['completion']:.0f}% "
+            f"for {bt[-1]['type'].lower()}. Lead with {bt[0]['type'].lower()}s when the "
+            f"message matters.")
+    if sf["replies_per_1k"] < 0.5:
+        out.append(
+            "<b>Nobody is replying.</b> Across every story captured, replies are "
+            "essentially zero — which usually means there's nothing to reply <i>to</i>. "
+            "Add a poll, question box or quiz sticker; stories that ask for a tap are "
+            "the ones that start conversations and feed the algorithm.")
+    if sf["thin"]:
+        out.append(f"<i>Early read — based on {sf['n']} stories. Treat as a direction, "
+                   f"not a conclusion; it firms up as the daily job collects more.</i>")
+    return out
