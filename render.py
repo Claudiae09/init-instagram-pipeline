@@ -143,6 +143,8 @@ def format_section(m):
                     st = (f'<div class="stats">'
                           f'<div><span>{sf["completion"]:.0f}%</span>watch through</div>'
                           f'<div><span>{sf["reach_med"]:,.0f}</span>median reach</div>'
+                          f'<div><span>{sf["passive"]:.0f}</span>likes &amp; stickers</div>'
+                          f'<div><span>{sf["shares"]:.0f}</span>shares</div>'
                           f'<div><span>{sf["n"]}</span>collected</div></div>')
                 span_s = "this year" if days is None else f"the last {days} days"
                 body = (st + f'<p class="line"><b>Collected daily</b>, since stories '
