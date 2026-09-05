@@ -26,7 +26,8 @@ TAB = "Competitors"
 # slowly. Lower this if the cadence should tighten.
 CADENCE_DAYS = 28
 SEED_HANDLES = ["init.fiu", "knighthacks", "ufswamphacks",
-                "codecrunchworldwide", "hackabull", "fiu_cec", "alpfafiu"]
+                "codecrunchworldwide", "hackabull", "colorstackatfiu",
+                "gdgatfiu"]
 CSV = os.path.join(os.path.dirname(os.path.abspath(__file__)), "csv",
                    "competitors.csv")
 
