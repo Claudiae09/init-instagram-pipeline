@@ -12,6 +12,10 @@ import pandas as pd
 import report_sections as R
 
 MIN_DAY  = 8        # posts needed before a weekday can be called the best
+HOUR_TRUST = 5      # posts in an hour before that hour is a recommendation
+HOUR_SHOW  = 3      # below this an hour is not shown at all
+DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
+        "Saturday", "Sunday"]
 MIN_SLOT = 6        # posts needed in an hour before we name that hour
 BANDS = [(1, 2), (3, 4), (5, 6), (7, 99)]
 MIN_BAND_WEEKS = 5  # a band with fewer weeks than this is not a recommendation
@@ -101,3 +105,41 @@ def posting_note(pf):
             out.append(f"You are averaging <b>{cur:.1f} a week</b>, which is "
                        f"inside that band.")
     return out
+
+
+def best_time_by_day(m, since_year=2025):
+    """The best hour to post on each weekday.
+
+    Picking the single best hour outright lands on slots carried by three or
+    four posts, so each row records how many posts sit behind it and is marked
+    when that is too few to lean on. Days stay in calendar order rather than
+    ranked, because this is read as a schedule.
+    """
+    m = m[(m["d"].dt.year >= since_year) & m["reach"].notna()].copy()
+    if not len(m):
+        return {"enough": False}
+    rows, best_reach = [], 0
+    for day in DAYS:
+        g = m[m["publish_weekday"] == day]
+        row = {"day": day, "posts": len(g)}
+        if len(g):
+            row["day_reach"] = float(g["reach"].median())
+            h = g.groupby("publish_hour_est").agg(n=("reach", "size"),
+                                                  med=("reach", "median"))
+            solid = h[h["n"] >= HOUR_TRUST].sort_values("med", ascending=False)
+            shown = h[h["n"] >= HOUR_SHOW].sort_values("med", ascending=False)
+            pick = solid if len(solid) else shown
+            if len(pick):
+                hour = int(pick.index[0])
+                row.update(hour=hour,
+                           hour_reach=float(pick.iloc[0]["med"]),
+                           hour_n=int(pick.iloc[0]["n"]),
+                           thin=not len(solid))
+                best_reach = max(best_reach, row["hour_reach"])
+        rows.append(row)
+    if not any("hour" in r for r in rows):
+        return {"enough": False}
+    for r in rows:
+        r["best"] = r.get("hour_reach") == best_reach and best_reach > 0
+    return {"enough": True, "rows": rows, "best_reach": best_reach,
+            "posts": len(m)}

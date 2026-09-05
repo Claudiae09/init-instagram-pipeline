@@ -164,11 +164,45 @@ def guidance_card(m):
         f'<span class="kv kvs">{esc(v)}</span>'
         f'<span class="kd">{esc(d)}</span></div>' for l, v, d in cells)
     notes = "".join(f"<li>{n}</li>" for n in TM.posting_note(pf))
+
+    # A schedule, so the days stay in calendar order rather than ranked.
+    bd = TM.best_time_by_day(m)
+    day_table = ""
+    if bd.get("enough"):
+        rows = []
+        for r in bd["rows"]:
+            if "hour" not in r:
+                rows.append(f'<tr><td>{esc(r["day"])}</td>'
+                            f'<td class="n">{r["posts"]}</td>'
+                            f'<td class="n">—</td><td class="n">—</td></tr>')
+                continue
+            mark = ('<span class="skew" title="Too few posts in that hour to '
+                    'lean on">\u2020</span>' if r.get("thin") else "")
+            rows.append(
+                f'<tr class="{"crow me" if r["best"] else ""}">'
+                f'<td>{esc(r["day"])}</td>'
+                f'<td class="n">{r["posts"]}</td>'
+                f'<td class="n">{esc(hour_label(r["hour"]))}{mark}</td>'
+                f'<td class="n">{r["hour_reach"]:,.0f}</td></tr>')
+        foot = ('<tr><td colspan="4" class="foot">Typical reach is the median '
+                'of posts published in that hour, so one viral post cannot set '
+                'the time. \u2020 marks an hour carried by fewer than 5 posts.'
+                '</td></tr>') if any(r.get("thin") for r in bd["rows"]) else ""
+        day_table = (
+            '<h3>Best time, day by day</h3>'
+            '<p class="sub2">Where to put a post on any given day. Based on '
+            f'{bd["posts"]} posts since 2025.</p>'
+            '<div class="tw"><table class="topics compact"><thead><tr>'
+            '<th>Day</th><th class="n">Posts</th><th class="n">Best time</th>'
+            '<th class="n">Typical reach</th></tr></thead>'
+            f'<tbody>{"".join(rows)}{foot}</tbody></table></div>')
+
     return ('<section class="block panel"><h2>When and how often to post</h2>'
             '<p class="sub2">Weekly guidance from your full history, so this '
             'one does not follow the period above.</p>'
             f'<div class="kpis kpis-3">{tiles}</div>'
             + (f'<ul class="csays">{notes}</ul>' if notes else "")
+            + day_table
             + "</section>")
 
 
@@ -716,7 +750,9 @@ CSS = """
 }
 
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;
+/* The sticky bar is ~77px, so anything scrolled to would tuck underneath it. */
+scroll-padding-top:92px}
 body{margin:0;background:var(--bg);color:var(--fg);
 font:var(--fs-body)/var(--lead-body) system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif}
 .wrap{max-width:1120px;margin:0 auto;padding:clamp(28px,5vw,52px) clamp(16px,4vw,24px) 80px}
