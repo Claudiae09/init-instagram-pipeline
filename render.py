@@ -86,34 +86,50 @@ def kpi_panes(m):
 
 
 def competitor_section(m):
-    """Where the account sits against the other orgs and hackathons."""
-    ours = None
-    try:
-        ours = float(m.attrs.get("followers")) if m.attrs.get("followers") else None
-    except Exception:
-        ours = None
-    cf = CP.competitor_findings(CSV, ours)
+    """Where the account sits against the other orgs competing for the same
+    students. Always renders the table, blanks included, so the accounts being
+    tracked are visible on the page rather than only in a spreadsheet."""
+    cf = CP.competitor_findings(CSV)
     notes = "".join(f"<li>{n}</li>" for n in CP.competitor_note(cf))
+    if not cf.get("enough"):
+        return ('<section class="block panel"><h2>How you compare</h2>'
+                f'<ul class="csays">{notes}</ul></section>')
 
-    bars = ""
-    if cf.get("enough") and cf["rows"]:
-        top = max(r["followers"] for r in cf["rows"])
-        bars = '<div class="bars">' + "".join(
-            f'<div class="bar{" me" if r["ours"] else ""}">'
-            f'<span class="bl">@{esc(r["handle"])}</span>'
-            f'<span class="bt"><i style="width:'
-            f'{r["followers"] / top * 100:.1f}%"></i></span>'
-            f'<span class="bv">{r["followers"]:,.0f}</span></div>'
-            for r in cf["rows"]) + "</div>"
-        stamp = (f'<p class="sub2">As recorded {cf["as_of"]:%d %b %Y}, across '
-                 f'{cf["weeks"]} reading{"s" if cf["weeks"] != 1 else ""}.</p>')
-    else:
-        stamp = ('<p class="sub2">Follower counts for the accounts you compete '
-                 'with for the same students.</p>')
+    body = []
+    for r in cf["rows"]:
+        me = " me" if r["ours"] else ""
+        name = (f'<a class="tlink" href="https://www.instagram.com/'
+                f'{esc(r["handle"])}/" target="_blank" rel="noopener">'
+                f'@{esc(r["handle"])}</a>')
+        if r["ours"]:
+            name += '<span class="you">you</span>'
+        fol = f'{r["followers"]:,.0f}' if r["followers"] is not None else "—"
+        if r.get("change") is not None:
+            ch = (f'<span class="{"up" if r["change"] >= 0 else "down"}">'
+                  f'{r["change"]:+,.0f}</span>')
+        else:
+            ch = "—"
+        if r["ours"]:
+            gap = "—"
+        elif r.get("gap") is not None:
+            gap = (f'<span class="{"down" if r["gap"] > 0 else "up"}">'
+                   f'{r["gap"]:+,.0f}</span>')
+        else:
+            gap = "—"
+        body.append(f'<tr class="crow{me}"><td>{name}</td>'
+                    f'<td class="n">{fol}</td><td class="n">{ch}</td>'
+                    f'<td class="n">{gap}</td></tr>')
 
+    stamp = (f'As recorded {cf["as_of"]:%d %b %Y}'
+             + (f', across {cf["weeks"]} readings.' if cf["weeks"] > 1 else '.'))
     return ('<section class="block panel"><h2>How you compare</h2>'
-            + stamp + bars
-            + f'<ul class="csays">{notes}</ul></section>')
+            f'<p class="sub2">The accounts competing for the same students. '
+            f'{stamp}</p>'
+            '<div class="tw"><table class="topics"><thead><tr>'
+            '<th>Account</th><th class="n">Followers</th>'
+            '<th class="n">Change</th><th class="n">vs you</th>'
+            f'</tr></thead><tbody>{"".join(body)}</tbody></table></div>'
+            f'<ul class="csays">{notes}</ul></section>')
 
 
 def guidance_card(m):
@@ -799,6 +815,11 @@ table.topics .up{color:var(--good);font-weight:600}
 table.topics .down{color:var(--bad);font-weight:600}
 a.tlink{color:var(--accent);text-decoration:none;display:block}
 a.tlink:hover{text-decoration:underline}
+tr.crow.me td{background:var(--soft)}
+tr.crow.me td:first-child{border-radius:var(--r-sm) 0 0 var(--r-sm)}
+tr.crow.me td:last-child{border-radius:0 var(--r-sm) var(--r-sm) 0}
+.you{display:inline-block;margin-left:8px;font-size:var(--fs-micro);
+font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em}
 a.tlink .eg{display:block;color:var(--muted);font-weight:400;
 font-size:var(--fs-micro);line-height:1.35;margin-top:2px;text-decoration:none}
 

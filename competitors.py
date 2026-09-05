@@ -53,66 +53,87 @@ def competitor_findings(csv_dir, ours_now=None):
     if not rows:
         return {"enough": False, "awaiting": True, "handles": handles,
                 "as_of": latest["date"]}
-    # Which accounts are still blank in the newest row. Naming them is the
-    # whole point of the empty state: it says exactly what to go and type.
-    missing = [h for h in handles
-               if h != OURS and pd.isna(latest.get(h))]
-    # Our own number alone is not a comparison.
-    if len([r for r in rows if not r["ours"]]) == 0:
-        return {"enough": False, "awaiting": True, "missing": missing,
-                "as_of": latest["date"]}
-    rows.sort(key=lambda r: -r["followers"])
-    for i, r in enumerate(rows, 1):
+    # Which accounts are still blank in the newest row.
+    missing = [h for h in handles if h != OURS and pd.isna(latest.get(h))]
+
+    # Always return a row per tracked account, even with no number yet, so the
+    # page can render the table rather than a message about a spreadsheet.
+    listed = []
+    for h in handles:
+        now = latest.get(h)
+        before = prev.get(h) if prev is not None else None
+        listed.append({
+            "handle": h,
+            "followers": None if pd.isna(now) else float(now),
+            "change": (float(now - before)
+                       if before is not None and not pd.isna(before)
+                       and not pd.isna(now) else None),
+            "ours": h == OURS,
+        })
+    known = [r for r in listed if r["followers"] is not None]
+    known.sort(key=lambda r: -r["followers"])
+    unknown = [r for r in listed if r["followers"] is None]
+    rows = known + unknown
+    for i, r in enumerate(known, 1):
         r["rank"] = i
+
     us = next((r for r in rows if r["ours"]), None)
-    if us is None and ours_now:
-        us = {"handle": OURS, "followers": float(ours_now), "change": None,
-              "ours": True, "rank": None}
-        rows.append(us)
-        rows.sort(key=lambda r: -r["followers"])
-        for i, r in enumerate(rows, 1):
-            r["rank"] = i
+    if us and us["followers"] is None and ours_now:
+        us["followers"] = float(ours_now)
+
+    # How each account compares with us, on size and on growth
+    if us and us["followers"]:
+        for r in rows:
+            if r["ours"] or r["followers"] is None:
+                continue
+            r["gap"] = r["followers"] - us["followers"]
+            if r.get("change") is not None and us.get("change") is not None:
+                r["growth_gap"] = r["change"] - us["change"]
+
     return {"enough": True, "rows": rows, "us": us, "as_of": latest["date"],
-            "weeks": len(d), "handles": handles, "missing": missing}
+            "weeks": len(d), "handles": handles, "missing": missing,
+            "have_numbers": len(known) > 1}
 
 
 def competitor_note(cf):
     if not cf.get("enough"):
+        return ["No competitor list set up yet."]
+    if not cf.get("have_numbers"):
         miss = cf.get("missing") or []
-        who = ("".join(f" @{h}," for h in miss).rstrip(",")
-               if miss else " the competitor columns")
-        return [f"<b>Waiting on the first numbers.</b> Open the "
-                f"<b>Competitors</b> tab of the Google Sheet and fill in"
-                f"{who}. Your own count is filled in for you each week.",
-                "<i>Instagram does not publish other accounts' follower counts "
-                "to us, so these have to be typed in.</i>"]
+        return [f"<b>No follower counts yet.</b> Instagram does not publish other "
+                f"accounts' figures to us, so these {len(miss)} have to be entered "
+                f"by hand, in the <b>Competitors</b> tab of the Google Sheet or by "
+                f"telling Claude the numbers. Yours is filled in automatically."]
     rows, us = cf["rows"], cf.get("us")
     out = []
     if us and us.get("rank"):
-        bigger = [r for r in rows if r["followers"] > us["followers"]]
+        bigger = [r for r in rows if r["followers"] and not r["ours"]
+                  and r["followers"] > us["followers"]]
+        total = len([r for r in rows if r["followers"]])
         if not bigger:
-            out.append(f"<b>You are the largest</b> of the {len(rows)} accounts "
+            out.append(f"<b>You are the largest</b> of the {total} accounts "
                        f"tracked, at {us['followers']:,.0f} followers.")
         else:
-            ahead = bigger[-1]                     # the nearest one above
-            gap = ahead["followers"] - us["followers"]
-            out.append(f"<b>You are {us['rank']} of {len(rows)}</b> at "
-                       f"{us['followers']:,.0f} followers. "
-                       f"@{ahead['handle']} is nearest above you, "
-                       f"{gap:,.0f} ahead.")
+            ahead = min(bigger, key=lambda r: r["followers"])
+            out.append(f"<b>You are {us['rank']} of {total}</b> at "
+                       f"{us['followers']:,.0f}. @{ahead['handle']} is nearest "
+                       f"above you, {ahead['followers'] - us['followers']:,.0f} "
+                       f"ahead.")
+    grew = [r for r in rows if r.get("growth_gap") is not None]
+    if grew and us and us.get("change") is not None:
+        faster = [r for r in grew if r["growth_gap"] > 0]
+        if not faster:
+            out.append(f"<b>You grew fastest</b> this week, {us['change']:+,.0f} "
+                       f"against every account tracked.")
+        else:
+            top = max(faster, key=lambda r: r["change"])
+            out.append(f"<b>@{top['handle']} grew fastest</b>, "
+                       f"{top['change']:+,.0f} against your "
+                       f"{us['change']:+,.0f}.")
     if cf.get("missing"):
-        out.append("<i>Still blank this week: "
+        out.append("<i>Still blank: "
                    + ", ".join(f"@{h}" for h in cf["missing"]) + ".</i>")
-    moved = [r for r in rows if r.get("change") is not None]
-    if moved:
-        moved.sort(key=lambda r: -r["change"])
-        top = moved[0]
-        out.append(f"Fastest growing since the last reading: "
-                   f"<b>@{top['handle']}</b>, {top['change']:+,.0f}.")
     if cf["weeks"] < 2:
-        out.append("<i>One reading so far. Week-on-week movement appears once "
-                   "there are two.</i>")
-    out.append("<i>Instagram does not publish other accounts' figures to us, so "
-               "these are entered by hand in the Google Sheet rather than "
-               "collected automatically.</i>")
+        out.append("<i>One reading so far. Growth comparisons appear once there "
+                   "are two.</i>")
     return out
