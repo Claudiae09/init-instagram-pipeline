@@ -62,12 +62,23 @@ def competitor_findings(csv_dir, ours_now=None):
     for h in handles:
         now = latest.get(h)
         before = prev.get(h) if prev is not None else None
+        # First reading we ever took for this account, which may not be the
+        # first row: accounts can be added to the sheet later on.
+        series = d[["date", h]].dropna()
+        first = series.iloc[0] if len(series) else None
+        gained = growth = None
+        if first is not None and not pd.isna(now) and len(series) > 1:
+            gained = float(now - first[h])
+            if first[h]:
+                growth = gained / float(first[h]) * 100
         listed.append({
             "handle": h,
             "followers": None if pd.isna(now) else float(now),
             "change": (float(now - before)
                        if before is not None and not pd.isna(before)
                        and not pd.isna(now) else None),
+            "gained": gained, "growth": growth,
+            "since": first["date"] if first is not None else None,
             "ours": h == OURS,
         })
     known = [r for r in listed if r["followers"] is not None]
@@ -81,7 +92,8 @@ def competitor_findings(csv_dir, ours_now=None):
     if us and us["followers"] is None and ours_now:
         us["followers"] = float(ours_now)
 
-    # How each account compares with us, on size and on growth
+    # How each account compares with us. Percentage, not raw followers: an
+    # account a tenth our size gaining 60 is outpacing us gaining 179.
     if us and us["followers"]:
         for r in rows:
             if r["ours"] or r["followers"] is None:
@@ -89,11 +101,15 @@ def competitor_findings(csv_dir, ours_now=None):
             r["gap"] = r["followers"] - us["followers"]
             if r.get("change") is not None and us.get("change") is not None:
                 r["growth_gap"] = r["change"] - us["change"]
+            if r.get("growth") is not None and us.get("growth") is not None:
+                r["vs_us"] = r["growth"] - us["growth"]
+                r["outpacing"] = r["vs_us"] > 0
 
     age = (pd.Timestamp.today().normalize() - latest["date"]).days
     return {"enough": True, "rows": rows, "us": us, "as_of": latest["date"],
             "weeks": len(d), "handles": handles, "missing": missing,
             "have_numbers": len(known) > 1, "age_days": int(age),
+            "tracked_since": d["date"].min(),
             "stale": age > 45}
 
 
@@ -121,17 +137,20 @@ def competitor_note(cf):
                        f"{us['followers']:,.0f}. @{ahead['handle']} is nearest "
                        f"above you, {ahead['followers'] - us['followers']:,.0f} "
                        f"ahead.")
-    grew = [r for r in rows if r.get("growth_gap") is not None]
-    if grew and us and us.get("change") is not None:
-        faster = [r for r in grew if r["growth_gap"] > 0]
-        if not faster:
-            out.append(f"<b>You grew fastest</b> since the last reading, "
-                       f"{us['change']:+,.0f} against every account tracked.")
-        else:
-            top = max(faster, key=lambda r: r["change"])
-            out.append(f"<b>@{top['handle']} grew fastest</b>, "
-                       f"{top['change']:+,.0f} against your "
-                       f"{us['change']:+,.0f}.")
+    # Who is gaining on us proportionally. This is the warning the follower
+    # totals cannot give: a small account can outgrow us for a year before it
+    # shows up in the ranking.
+    fast = sorted([r for r in rows if r.get("outpacing")],
+                  key=lambda r: -r["vs_us"])
+    if fast and us and us.get("growth") is not None:
+        names = ", ".join(f"@{r['handle']} ({r['growth']:+.0f}%)" for r in fast[:3])
+        out.append(f"<b>Growing faster than you:</b> {names}, against your "
+                   f"{us['growth']:+.1f}%. Small accounts move quickly in "
+                   f"percentage terms, but this is where a challenger shows up "
+                   f"first.")
+    elif us and us.get("growth") is not None:
+        out.append(f"<b>You are growing fastest</b> of the accounts tracked, "
+                   f"{us['growth']:+.1f}% since {cf['tracked_since']:%d %b}.")
     if cf.get("stale"):
         out.append(f"<i>These numbers are {cf['age_days']} days old. A fresh row "
                    f"is added to the sheet every month for someone to fill.</i>")
@@ -140,5 +159,6 @@ def competitor_note(cf):
                    + ", ".join(f"@{h}" for h in cf["missing"]) + ".</i>")
     if cf["weeks"] < 2:
         out.append("<i>One reading so far, so there is nothing to compare it "
-                   "with yet. Change appears next month, once there are two.</i>")
+                   "with yet. Gained and Growth appear next month, once there "
+                   "are two.</i>")
     return out

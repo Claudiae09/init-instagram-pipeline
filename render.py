@@ -95,9 +95,9 @@ def competitor_section(m):
         return ('<section class="block panel"><h2>How you compare</h2>'
                 f'<ul class="csays">{notes}</ul></section>')
 
-    # Only show Change once there is something to subtract; an empty column
-    # reads as broken rather than as pending.
-    has_change = any(r.get("change") is not None for r in cf["rows"])
+    # Growth columns need a second reading to subtract from; an empty column
+    # reads as broken rather than as pending, so they appear when they can.
+    has_growth = any(r.get("growth") is not None for r in cf["rows"])
     body = []
     for r in cf["rows"]:
         me = " me" if r["ours"] else ""
@@ -106,22 +106,34 @@ def competitor_section(m):
                 f'@{esc(r["handle"])}</a>')
         fol = f'{r["followers"]:,.0f}' if r["followers"] is not None else "—"
         cells = f'<td>{name}</td><td class="n">{fol}</td>'
-        if has_change:
-            if r.get("change") is not None:
-                cells += (f'<td class="n {"up" if r["change"] >= 0 else "down"}">'
-                          f'{r["change"]:+,.0f}</td>')
-            else:
+        if has_growth:
+            g = r.get("gained")
+            cells += f'<td class="n">{g:+,.0f}</td>' if g is not None else '<td class="n">—</td>'
+            pct = r.get("growth")
+            if pct is None:
                 cells += '<td class="n">—</td>'
+            else:
+                # Red where someone is gaining on us in percentage terms, which
+                # is the thing raw follower counts hide.
+                cls = ("up" if r["ours"] else
+                       "down" if r.get("outpacing") else "")
+                cells += f'<td class="n {cls}">{pct:+.1f}%</td>'
         body.append(f'<tr class="crow{me}">{cells}</tr>')
 
-    stamp = (f'As recorded {cf["as_of"]:%d %b %Y}'
-             + (f', across {cf["weeks"]} readings.' if cf["weeks"] > 1 else '.'))
+    stamp = f'As recorded {cf["as_of"]:%d %b %Y}'
+    if has_growth:
+        stamp += (f'. Gained and Growth are since '
+                  f'{cf["tracked_since"]:%d %b %Y}, across {cf["weeks"]} '
+                  f'readings.')
+    else:
+        stamp += '.'
     return ('<section class="block panel"><h2>How you compare</h2>'
             f'<p class="sub2">The accounts competing for the same students. '
             f'{stamp} Updated monthly.</p>'
             '<div class="tw"><table class="topics compact"><thead><tr>'
             '<th>Account</th><th class="n">Followers</th>'
-            + ('<th class="n">Change</th>' if has_change else '')
+            + ('<th class="n">Gained</th><th class="n">Growth</th>'
+               if has_growth else '')
             + f'</tr></thead><tbody>{"".join(body)}</tbody></table></div>'
             f'<ul class="csays">{notes}</ul></section>')
 
