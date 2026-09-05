@@ -246,7 +246,9 @@ def period_bar():
                     f'aria-controls="k-{key} p-{key} g-{key}" '
                     f'aria-selected="{str(sel).lower()}" '
                     f'tabindex="{0 if sel else -1}">{label}</button>')
-    return ('<div class="chrome"><div class="toolbar">'
+    # chrome is full-bleed; .bleed inside it caps the contents at the same
+    # width as the page body so the control lines up with the content.
+    return ('<div class="chrome"><div class="bleed"><div class="toolbar">'
             '<span class="tlabel">Showing</span>'
             f'<div class="segs" role="tablist" aria-label="Time period">'
             f'<span class="segpill" aria-hidden="true"></span>{"".join(tabs)}</div>'
@@ -1098,6 +1100,14 @@ font-variant-numeric:tabular-nums}
 }
 @media (max-width:900px){
   .grid{grid-template-columns:1fr}
+}
+@media (max-width:600px){
+  /* A phone cannot spare 143px of permanent chrome for a three-option
+     control. The pill's selected state already says what is showing, and the
+     live figure is the part worth keeping. */
+  .tlabel,.thint{display:none}
+  .toolbar{padding:8px 0;gap:10px}
+  .tlive{font-size:var(--fs-micro)}
 }
 @media (max-width:520px){
   .decision-head{flex-direction:column;align-items:flex-start}
