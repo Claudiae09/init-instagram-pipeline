@@ -268,8 +268,9 @@ def charts_section(m):
         note = CN.note_for(title, m)
         blurb = ""
         if note:
-            blurb = (f'<p class="cwhat">{note[0]}</p>'
-                     f'<p class="csays">{note[1]}</p>')
+            what, bullets = note
+            blurb = (f'<p class="cwhat">{what}</p><ul class="csays">'
+                     + "".join(f"<li>{b}</li>" for b in bullets) + "</ul>")
         items.append(
             f'<h3>{esc(title)}</h3>{blurb}'
             f'<div class="viz"><iframe src="{src}" height="520" loading="lazy" '
@@ -335,7 +336,10 @@ margin:10px 0;font-size:.87rem;color:#6b5518}
 .allhist{color:var(--muted);font-size:.82rem;margin:10px 0 0;font-style:italic}
 .cwhat{color:var(--muted);font-size:.87rem;margin:0 0 6px;line-height:1.55}
 .csays{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);
-border-radius:8px;padding:10px 13px;margin:0 0 12px;font-size:.88rem;line-height:1.6}
+border-radius:8px;padding:11px 14px 11px 30px;margin:0 0 12px;font-size:.88rem;
+line-height:1.55}
+.csays li{margin:0 0 6px}
+.csays li:last-child{margin:0}
 .banner{background:#fff4e0;border:1px solid #efd3a3;border-left:4px solid #d98c1f;
 border-radius:8px;padding:12px 14px;margin:0 0 16px;font-size:.88rem;
 color:#6b4a12;line-height:1.55}
