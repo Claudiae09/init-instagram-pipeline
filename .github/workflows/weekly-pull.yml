@@ -56,6 +56,9 @@ jobs:
           GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
         run: python write_status.py
 
+      - name: Build the dashboard page
+        run: python generate_report.py
+
       # account_insights.csv is append-only (one row per day) and stories.csv
       # accumulates — a fresh checkout would otherwise reset that history every
       # run, so commit the updated CSVs back to the repo.
@@ -63,7 +66,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add csv/
+          git add csv/ site/
           if git diff --staged --quiet; then
             echo "no data changes to commit"
           else
