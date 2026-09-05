@@ -1444,8 +1444,7 @@ def build(m):
          charts_section(m),
          # The build stamp stays, quietly. Without it a stale deploy is
          # indistinguishable from a bug in the page.
-         f'<footer><p class="sig">Built by <b>Claudia Espinosa</b> '
-         f'for INIT FIU</p>'
+         f'<footer><p class="sig">Built by <b>Claudia</b></p>'
          f'<p class="fmeta">Generated from the Instagram API · data through '
          f'{newest:%B %-d, %Y} · updates itself every week</p>'
          f'<p class="build">Page built '
