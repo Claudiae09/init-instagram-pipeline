@@ -62,6 +62,19 @@ jobs:
           GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
         run: python write_status.py
 
+      # Deploy straight from here rather than waiting for Cloudflare to
+      # notice the commit. One deploy per pipeline run instead of one per
+      # commit, and a failure shows up in this log instead of a dashboard.
+      # No-ops until CLOUDFLARE_API_TOKEN exists, so it is safe to merge now.
+      - name: Deploy to Cloudflare
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: deploy
+
       - name: Commit updated data
         run: |
           git config user.name  "github-actions[bot]"
