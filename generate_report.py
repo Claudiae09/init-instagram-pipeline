@@ -20,6 +20,22 @@ CSV = HERE / "csv"
 OUT = HERE / "site"
 OUT.mkdir(exist_ok=True)
 
+# Published Tableau Public workbook. Each section embeds the matching sheet;
+# the narrative around it is still computed from the data below.
+TABLEAU_WORKBOOK = "Init-Instagram"
+TABLEAU_PROFILE = "claudia.espinosa3716"
+TABLEAU_HOME = (f"https://public.tableau.com/app/profile/{TABLEAU_PROFILE}"
+                f"/viz/{TABLEAU_WORKBOOK}/Sheet1")
+
+
+def tableau(sheet, height=560):
+    """Embed one published Tableau sheet."""
+    src = (f"https://public.tableau.com/views/{TABLEAU_WORKBOOK}/{sheet}"
+           f"?:embed=y&:showVizHome=no&:toolbar=no&:tabs=no&:display_count=no")
+    return (f'<div class="viz"><iframe src="{src}" height="{height}" loading="lazy" '
+            f'title="{sheet}" referrerpolicy="no-referrer-when-downgrade"></iframe></div>')
+
+
 NUMERIC = ["reach", "shares", "saved", "total_interactions", "likes", "comments",
            "views", "avg_watch_time_sec", "total_watch_time_sec", "follows",
            "profile_visits", "engagement_rate"]
@@ -289,6 +305,11 @@ color:var(--muted);font-weight:600}
 .tldr li:last-child{margin-bottom:0}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;
 padding:18px;margin:14px 0 0;overflow-x:auto}
+.viz{margin:14px 0 0;border:1px solid var(--line);border-radius:10px;overflow:hidden;
+background:#fff}
+.viz iframe{width:100%;border:0;display:block}
+.explore{display:inline-block;margin:10px 0 0;padding:9px 16px;border-radius:8px;
+background:var(--accent);color:#fff;text-decoration:none;font-size:.9rem;font-weight:600}
 .means{border-left:3px solid var(--line);padding:2px 0 2px 14px;margin:14px 0 0;
 color:var(--muted);font-size:.94rem}
 .means b{color:var(--fg)}
@@ -345,8 +366,7 @@ def build(m):
     cols = [C.get(t["type"].split()[-1], C["accent"]) for t in types]
     P.append(section(
         "1 · Which format gets shared most",
-        bar_chart([t["type"].replace("IG ", "") for t in types],
-                  [t["share_1k"] for t in types], cols),
+        tableau("Sheet1", 520),
         f"<b>Shares per 1,000 people reached.</b> This is the most important chart here: "
         f"a share puts your post in front of someone who doesn't follow you. "
         f"<b>{types[0]['type']}s lead at {types[0]['share_1k']:.1f}</b>, "
@@ -360,8 +380,7 @@ def build(m):
     # 2. reach trend
     P.append(section(
         "2 · Are we reaching more people over time?",
-        line_chart([str(r["month"])[-2:] + "/" + str(r["month"])[2:4] for _, r in mon.iterrows()],
-                   [r["reach_med"] for _, r in mon.iterrows()]),
+        tableau("Sheet2", 520),
         f"<b>Median people reached per post, by month.</b> Median (not average) so one viral "
         f"post can't distort the trend. Latest month: "
         f"<b>{mon.iloc[-1]['reach_med']:,.0f}</b> per post. "
@@ -374,9 +393,7 @@ def build(m):
     # 3. volume vs ER
     P.append(section(
         "3 · Does posting more actually help?",
-        combo_chart([str(r["month"])[-2:] + "/" + str(r["month"])[2:4] for _, r in mon.iterrows()],
-                    [int(r["posts"]) for _, r in mon.iterrows()],
-                    [r["er"] for _, r in mon.iterrows()]),
+        tableau("Sheet4", 540),
         "<b>Bars = number of posts. Line = engagement rate.</b> If the bars go up while the "
         "line goes down, you're posting more and getting less back per post — a signal to "
         "slow down and raise quality rather than volume.",
@@ -394,7 +411,7 @@ def build(m):
                          for w, h, _, _ in slots[:3]) or "not enough data yet"
     P.append(section(
         "4 · When should we post?",
-        heatmap(m),
+        tableau("Sheet5", 560),
         f"<b>Darker = more people reached.</b> Each square is a day-and-hour slot; shading is "
         f"the median reach of posts published then. Your strongest windows: {slot_txt}. "
         f"Blank squares are times you haven't posted.",
@@ -407,10 +424,7 @@ def build(m):
     # 5. saves + shares by type
     P.append(section(
         "5 · Saves vs shares by format",
-        bar_chart([f"{t['type'].replace('IG ','')} save" for t in types] +
-                  [f"{t['type'].replace('IG ','')} share" for t in types],
-                  [t["saves_1k"] for t in types] + [t["share_1k"] for t in types],
-                  [C["good"]] * len(types) + [C["accent"]] * len(types)),
+        tableau("Sheet7", 540),
         "<b>Per 1,000 reached.</b> Saves mean people want to come back to it — useful for "
         "deadlines, opportunities, how-tos. Shares mean they're spreading it. Saves show "
         "value; shares show growth. Both matter, for different goals.",
@@ -433,9 +447,7 @@ def build(m):
             f"<td class='n'>{r['saved']:,.0f}</td></tr>")
     P.append(section(
         "6 · Your 10 most-shared posts",
-        "<table><thead><tr><th>Post</th><th>Format</th><th class='n'>Reach</th>"
-        "<th class='n'>Shares</th><th class='n'>Saves</th></tr></thead><tbody>"
-        + "".join(rows) + "</tbody></table>",
+        tableau("Sheet8", 600),
         "<b>Ranked by shares.</b> These are the posts that travelled furthest beyond your "
         "followers — the closest thing to a template for what to make more of. "
         "Click any caption to open the post."))
@@ -446,12 +458,33 @@ def build(m):
         rm = reels.groupby(reels["d"].dt.to_period("M"))["avg_watch_time_sec"].median().tail(12)
         P.append(section(
             "7 · How long people watch our reels",
-            line_chart([str(p)[-2:] + "/" + str(p)[2:4] for p in rm.index],
-                       list(rm.values), color=C["reel"]),
+            tableau("Sheet9", 520),
             f"<b>Median seconds watched per reel, by month.</b> Currently "
             f"<b>{rm.iloc[-1]:.1f}s</b>. Watch time is the main thing Instagram's algorithm "
             f"rewards for reels — longer watch time means more distribution. "
             f"Across all {len(reels)} reels the median is {reels['avg_watch_time_sec'].median():.1f}s."))
+
+    # 6b. reach vs share rate scatter (Tableau Sheet3)
+    P.append(section(
+        "8 · Which individual posts actually worked",
+        tableau("Sheet3", 560),
+        "<b>Each dot is one post.</b> Across = how many people it reached; up = how often "
+        "it got shared per 1,000 reached. Top-right are your winners. <b>Top-left is the "
+        "interesting corner</b>: strong content that didn't get distribution — worth "
+        "reposting or boosting. Hover a dot to see which post it was.",
+        rec="Find your top-left dots and repost that content at a stronger time slot — "
+            "it already proved people want to share it, it just didn't get seen."))
+
+    # 6c. ER diagnostic (Tableau Sheet6)
+    P.append(section(
+        "9 · Engagement rate by format (diagnostic)",
+        tableau("Sheet6", 500),
+        "<b>Read this one carefully.</b> Engagement rate is interactions divided by reach, "
+        "so it <i>falls</i> as reach grows — a post that escapes your follower bubble "
+        "reaches people who scroll past, which lowers the percentage. A lower rate on a "
+        "high-reach post is not a failure.",
+        rec="Use this to judge whether the people who saw a post cared — not whether it "
+            "grew you. For growth, look at share rate at the top of this page."))
 
     # 8. demographics
     dpath = CSV / "audience_demographics.csv"
@@ -470,11 +503,12 @@ def build(m):
                                     list(sub["follower_count"]),
                                     [C["accent"]] * len(sub), w=680, h=210) + "</div>")
         if blocks:
-            P.append("<h2>8 · Who follows us</h2>" + "".join(blocks) +
+            P.append("<h2>10 · Who follows us</h2>" + "".join(blocks) +
                      "<p class='means'><b>Follower counts by segment.</b> Use this to sanity-check "
                      "who you're actually talking to — if your content targets a group that "
                      "barely appears here, that's a gap worth closing.</p>")
 
+    P.append(f'<a class="explore" href="{TABLEAU_HOME}" target="_blank" rel="noopener">Explore the full data in Tableau →</a>')
     P.append(f"<footer>Generated automatically from the Instagram API · "
              f"data through {newest:%B %d, %Y} · page built {today:%B %d, %Y}. "
              f"No manual steps — this refreshes every week.</footer></div>")
