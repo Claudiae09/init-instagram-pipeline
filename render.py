@@ -150,17 +150,23 @@ def format_section(m):
                 # numbers repeat across Month and Year and that reads as a bug
                 # unless the limitation is stated up front. It clears itself:
                 # `truncated` goes false once collection covers the window.
-                banner = ""
+                # A window we cannot fill shows the banner and nothing else.
+                # Partial numbers under a "Month" heading invite the wrong
+                # conclusion, so we show no figures at all rather than figures
+                # that only cover part of the period.
                 if sf.get("truncated"):
                     what = "a full year" if days is None else f"a full {days} days"
-                    banner = (
+                    panes.append(
+                        f'<div class="pane{show}" id="f-{pkey}-{j}" role="tabpanel">'
                         f'<p class="banner"><b>Instagram\u2019s API cannot give us '
                         f'this history.</b> Stories are only retrievable while they '
                         f'are still live, so anything posted before daily collection '
                         f'began on {esc(sf["since"])} is gone for good and cannot be '
-                        f'recovered. This view covers {sf["span_days"]} days rather '
-                        f'than {what}. It completes on its own by '
-                        f'{esc(sf["complete_on"])}.</p>')
+                        f'recovered. There is not {what} of story data to show yet \u2014 '
+                        f'the <b>Week</b> view has everything we do hold. This view '
+                        f'fills in on its own by {esc(sf["complete_on"])}.</p></div>')
+                    continue
+                banner = ""
                 span_s = "this year" if days is None else f"the last {days} days"
                 # Say what the window actually covers, not just what was asked
                 # for — collection began mid-year, so Month and Year overlap.
