@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pandas as pd
 
+import audience as AU
 import chart_notes as CN
 import report_sections as R
 import topics as TP
@@ -349,6 +350,33 @@ def topic_section(m):
             f'<ul class="csays">{bullets}</ul>{table}</section>')
 
 
+def audience_section():
+    """Who follows the account. The only part of the page not about posts."""
+    af = AU.audience_findings(CSV)
+    if not af.get("enough"):
+        return ""
+    bars = ""
+    age = af["parts"].get("age")
+    if age:
+        # A bar per age bracket: the shape of this is the finding, and a table
+        # of percentages does not show a shape.
+        top = max(p for _, _, p in age["segments"])
+        rows = "".join(
+            f'<div class="bar"><span class="bl">{esc(seg)}</span>'
+            f'<span class="bt"><i style="width:{pct / top * 100:.1f}%"></i></span>'
+            f'<span class="bv">{pct:.0f}%</span></div>'
+            for seg, _, pct in sorted(age["segments"],
+                                      key=lambda x: x[0]))
+        bars = f'<div class="bars">{rows}</div>'
+    return ('<section class="block"><h2>Who follows you</h2>'
+            '<p class="sub2">Instagram reports this for followers, refreshed '
+            'weekly.</p>'
+            + bars
+            + '<ul class="csays">'
+            + "".join(f"<li>{b}</li>" for b in AU.audience_recommendations(af))
+            + "</ul></section>")
+
+
 def charts_section(m):
     items = []
     for title, sheet in CHARTS:
@@ -521,6 +549,16 @@ a.tlink:hover{text-decoration:underline}
 a.tlink .eg{display:block;color:var(--muted);font-weight:400;
 font-size:var(--fs-micro);line-height:1.35;margin-top:2px;text-decoration:none}
 
+/* ── audience bars ──────────────────────────────────────────────────────── */
+.bars{margin:14px 0 16px}
+.bar{display:grid;grid-template-columns:56px 1fr 44px;align-items:center;gap:10px;
+margin:0 0 6px;font-size:var(--fs-micro);color:var(--muted)}
+.bl{font-variant-numeric:tabular-nums}
+.bt{background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);
+height:14px;overflow:hidden}
+.bt i{display:block;height:100%;background:var(--accent);opacity:.85}
+.bv{text-align:right;font-variant-numeric:tabular-nums;color:var(--fg);font-weight:600}
+
 /* ── charts ─────────────────────────────────────────────────────────────── */
 .viz{border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;
 background:var(--bg);margin-bottom:6px}
@@ -605,6 +643,7 @@ def build(m):
          decision_card(m),
          topic_section(m),
          format_section(m),
+         audience_section(),
          charts_section(m),
          # Build stamp so it is obvious at a glance whether the deployed page
          # is the current one. Without it, a stale deploy is indistinguishable
