@@ -1,701 +1,801 @@
 pull_date,breakdown,segment,follower_count
 2026-06-23,age,13-17,7
-2026-06-23,city,"Seattle, Washington",57
-2026-06-23,age,18-24,1933
-2026-06-23,age,25-34,2717
-2026-06-23,age,35-44,657
-2026-06-23,age,45-54,292
-2026-06-23,age,55-64,138
-2026-06-23,age,65+,58
-2026-06-23,gender,F,1594
-2026-06-23,gender,M,2665
-2026-06-23,city,"Atlanta, Georgia",21
-2026-06-23,city,"San Francisco, California",33
-2026-06-23,city,"Davie, Florida",63
-2026-06-23,city,"Kendall, Florida",76
-2026-06-23,city,"Hialeah, Florida",127
-2026-06-23,city,"Olympia Heights, Florida",26
-2026-06-23,city,"Princeton, Florida",44
-2026-06-23,city,"Aventura, Florida",23
-2026-06-23,city,"Ives Estates, Florida",27
-2026-06-23,city,"Coral Springs, Florida",33
-2026-06-23,city,"Kendale Lakes, Florida",76
-2026-06-23,country,PE,13
-2026-06-23,country,DO,8
-2026-06-23,city,"New York, New York",83
-2026-06-23,city,"Gainesville, Florida",47
-2026-06-23,city,"Weston, Florida",43
-2026-06-23,city,"North Miami Beach, Florida",29
-2026-06-23,city,"Homestead, Florida",49
-2026-06-23,city,"West Kendall, Florida",71
-2026-06-23,city,"Country Club, Florida",51
-2026-06-23,city,"North Miami, Florida",47
-2026-06-23,city,"Sweetwater, Florida",514
-2026-06-23,city,"Pembroke Pines, Florida",124
-2026-06-23,city,"Union Park, Florida",53
-2026-06-23,city,"Temple Terrace, Florida",37
-2026-06-23,city,"Coral Gables, Florida",27
-2026-06-23,city,"Fort Lauderdale, Florida",44
-2026-06-23,country,PL,4
-2026-06-23,city,"Doral, Florida",150
-2026-06-23,city,"The Hammocks, Florida",94
-2026-06-23,city,"Tamiami, Florida",101
-2026-06-23,city,"Miramar, Florida",122
-2026-06-23,city,"Orlando, Florida",23
-2026-06-23,city,"Tampa, Florida",26
-2026-06-23,city,"Plantation, Florida",43
-2026-06-23,city,"Westchester, Florida",48
-2026-06-23,city,"The Crossings, Florida",33
-2026-06-23,city,"Richmond West, Florida",43
-2026-06-23,city,"Hollywood, Florida",52
-2026-06-23,country,HN,4
-2026-06-23,city,"Hialeah Gardens, Florida",23
-2026-06-23,country,ES,23
-2026-06-23,city,"Miami Lakes, Florida",42
-2026-06-23,country,TR,8
-2026-06-23,country,EC,11
-2026-06-23,city,"Miami, Florida",312
-2026-06-23,city,"Sunrise, Florida",27
-2026-06-23,city,"Miami Beach, Florida",40
-2026-06-23,country,TT,7
-2026-06-23,country,DE,10
-2026-06-23,country,PR,8
-2026-06-23,country,BD,11
-2026-06-23,country,TW,5
-2026-06-23,country,JM,5
-2026-06-23,city,"Cutler Bay, Florida",37
-2026-06-23,country,FR,5
-2026-06-23,country,BR,21
-2026-06-23,country,MA,10
-2026-06-23,country,DZ,6
-2026-06-23,country,KE,13
-2026-06-23,country,ID,12
-2026-06-23,country,GB,18
 2026-06-23,country,OM,4
+2026-06-23,country,GB,18
+2026-06-23,country,ID,12
+2026-06-23,country,KE,13
+2026-06-23,country,DZ,6
+2026-06-23,country,MA,10
+2026-06-23,country,BR,21
+2026-06-23,country,FR,5
+2026-06-23,city,"Cutler Bay, Florida",37
+2026-06-23,country,JM,5
+2026-06-23,country,TW,5
+2026-06-23,country,BD,11
+2026-06-23,country,PR,8
+2026-06-23,country,DE,10
+2026-06-23,country,TT,7
+2026-06-23,city,"Miami Beach, Florida",40
+2026-06-23,city,"Sunrise, Florida",27
+2026-06-23,city,"Miami, Florida",312
+2026-06-23,country,EC,11
+2026-06-23,country,TR,8
+2026-06-23,city,"Miami Lakes, Florida",42
 2026-06-23,gender,U,1543
-2026-06-23,country,HK,4
 2026-06-23,country,RU,4
 2026-06-23,city,"Bangalore, Karnataka",23
 2026-06-23,country,IR,6
-2026-06-23,country,CA,62
-2026-06-23,country,IL,4
-2026-06-23,country,KN,4
-2026-06-23,country,AE,5
-2026-06-23,country,IN,149
-2026-06-23,country,ZA,5
-2026-06-23,country,GH,4
-2026-06-23,country,CO,19
-2026-06-23,country,CL,9
-2026-06-23,country,MX,25
-2026-06-23,country,AL,6
-2026-06-23,country,US,5090
-2026-06-23,country,VE,13
-2026-06-23,country,NG,23
-2026-06-23,country,AZ,4
-2026-06-23,country,VN,12
-2026-06-23,country,PH,9
-2026-06-23,country,PK,18
-2026-06-23,country,AU,4
-2026-06-23,country,AR,14
-2026-06-23,country,PA,5
 2026-06-23,city,"Miami Gardens, Florida",43
-2026-08-16,age,55-64,142
-2026-08-16,age,25-34,2757
-2026-08-16,age,65+,61
-2026-08-16,age,45-54,294
-2026-08-16,city,"Hollywood, Florida",58
-2026-08-16,gender,F,1595
-2026-08-16,city,"Kendale Lakes, Florida",69
-2026-08-16,age,13-17,3
-2026-08-16,country,PL,4
-2026-08-16,age,35-44,668
-2026-08-16,city,"Ives Estates, Florida",27
-2026-08-16,city,"Miramar, Florida",123
-2026-08-16,gender,M,2669
-2026-08-16,city,"New York, New York",88
-2026-08-16,city,"Davie, Florida",66
-2026-08-16,city,"Gainesville, Florida",40
-2026-08-16,city,"Coral Terrace, Florida",23
-2026-08-16,city,"Kendall, Florida",76
-2026-08-16,city,"Hialeah, Florida",116
-2026-08-16,city,"Olympia Heights, Florida",30
-2026-08-16,city,"Princeton, Florida",43
-2026-08-16,city,"Sweetwater, Florida",436
-2026-08-16,city,"Coral Springs, Florida",36
-2026-08-16,gender,U,1548
-2026-08-16,city,"Doral, Florida",161
-2026-08-16,country,TR,6
-2026-08-16,city,"The Hammocks, Florida",95
-2026-08-16,city,"Miami Lakes, Florida",50
-2026-08-16,city,"West Kendall, Florida",68
-2026-08-16,city,"Country Club, Florida",53
-2026-08-16,city,"North Miami, Florida",41
-2026-08-16,city,"Fort Lauderdale, Florida",37
-2026-08-16,city,"Pembroke Pines, Florida",121
-2026-08-16,city,"Union Park, Florida",41
-2026-08-16,city,"North Miami Beach, Florida",34
-2026-08-16,city,"Coral Gables, Florida",25
-2026-08-16,city,"San Francisco, California",33
-2026-08-16,city,"Weston, Florida",47
-2026-08-16,city,"Tamiami, Florida",91
-2026-08-16,city,"Richmond West, Florida",46
-2026-08-16,city,"Charlotte, North Carolina",29
-2026-08-16,city,"South Miami Heights, Florida",24
-2026-08-16,city,"Orlando, Florida",26
-2026-08-16,city,"Tampa, Florida",28
-2026-08-16,city,"Plantation, Florida",39
-2026-08-16,city,"Westchester, Florida",51
-2026-08-16,city,"The Crossings, Florida",34
-2026-08-16,city,"Seattle, Washington",60
-2026-08-16,city,"Homestead, Florida",49
-2026-08-16,age,18-24,1887
-2026-08-16,country,IR,6
-2026-08-16,country,JM,5
-2026-08-16,country,KE,13
-2026-08-16,country,CA,61
-2026-08-16,city,"Miami, Florida",310
-2026-08-16,city,"Miami Beach, Florida",31
-2026-08-16,city,"Sunrise, Florida",32
-2026-08-16,country,TT,8
-2026-08-16,country,DE,11
-2026-08-16,country,PR,7
-2026-08-16,country,BD,11
-2026-08-16,country,PK,19
-2026-08-16,country,TW,6
-2026-08-16,city,"Cutler Bay, Florida",37
+2026-06-23,country,PA,5
+2026-06-23,country,AR,14
+2026-06-23,country,AU,4
+2026-06-23,country,PK,18
+2026-06-23,country,PH,9
+2026-06-23,country,VN,12
+2026-06-23,country,AZ,4
+2026-06-23,country,NG,23
+2026-06-23,country,VE,13
+2026-06-23,country,ES,23
+2026-06-23,country,US,5090
+2026-06-23,country,MX,25
+2026-06-23,country,CL,9
+2026-06-23,country,CO,19
+2026-06-23,country,GH,4
+2026-06-23,country,ZA,5
+2026-06-23,country,IN,149
+2026-06-23,country,AE,5
+2026-06-23,country,KN,4
+2026-06-23,country,IL,4
+2026-06-23,country,CA,62
+2026-06-23,country,AL,6
+2026-06-23,city,"Hialeah Gardens, Florida",23
+2026-06-23,country,HK,4
+2026-06-23,city,"Hollywood, Florida",52
+2026-06-23,country,DO,8
+2026-06-23,country,PE,13
+2026-06-23,city,"Kendale Lakes, Florida",76
+2026-06-23,city,"Coral Springs, Florida",33
+2026-06-23,city,"Ives Estates, Florida",27
+2026-06-23,city,"Aventura, Florida",23
+2026-06-23,city,"Princeton, Florida",44
+2026-06-23,city,"Olympia Heights, Florida",26
+2026-06-23,city,"Hialeah, Florida",127
+2026-06-23,city,"Kendall, Florida",76
+2026-06-23,city,"New York, New York",83
+2026-06-23,city,"Davie, Florida",63
+2026-06-23,city,"Atlanta, Georgia",21
+2026-06-23,gender,M,2665
+2026-06-23,gender,F,1594
+2026-06-23,age,65+,58
+2026-06-23,age,55-64,138
+2026-06-23,age,45-54,292
+2026-06-23,age,35-44,657
+2026-06-23,age,25-34,2717
+2026-06-23,age,18-24,1933
+2026-06-23,country,HN,4
+2026-06-23,city,"San Francisco, California",33
+2026-06-23,city,"Gainesville, Florida",47
+2026-06-23,city,"Seattle, Washington",57
+2026-06-23,city,"Miramar, Florida",122
+2026-06-23,city,"Richmond West, Florida",43
+2026-06-23,city,"The Crossings, Florida",33
+2026-06-23,city,"Westchester, Florida",48
+2026-06-23,city,"Plantation, Florida",43
+2026-06-23,city,"Tampa, Florida",26
+2026-06-23,city,"Orlando, Florida",23
+2026-06-23,city,"Weston, Florida",43
+2026-06-23,city,"Tamiami, Florida",101
+2026-06-23,city,"The Hammocks, Florida",94
+2026-06-23,country,PL,4
+2026-06-23,city,"Doral, Florida",150
+2026-06-23,city,"Coral Gables, Florida",27
+2026-06-23,city,"Temple Terrace, Florida",37
+2026-06-23,city,"Union Park, Florida",53
+2026-06-23,city,"Pembroke Pines, Florida",124
+2026-06-23,city,"Sweetwater, Florida",514
+2026-06-23,city,"North Miami, Florida",47
+2026-06-23,city,"Country Club, Florida",51
+2026-06-23,city,"West Kendall, Florida",71
+2026-06-23,city,"Homestead, Florida",49
+2026-06-23,city,"North Miami Beach, Florida",29
+2026-06-23,city,"Fort Lauderdale, Florida",44
+2026-08-16,country,MA,10
 2026-08-16,country,DZ,7
 2026-08-16,country,EC,9
-2026-08-16,country,MA,10
 2026-08-16,country,DO,8
-2026-08-16,country,BR,23
+2026-08-16,country,JM,5
 2026-08-16,country,CR,4
 2026-08-16,city,"Bangalore, Karnataka",28
 2026-08-16,country,ID,12
 2026-08-16,country,GB,15
+2026-08-16,country,BR,23
+2026-08-16,city,"Cutler Bay, Florida",37
+2026-08-16,country,KE,13
+2026-08-16,country,PK,19
+2026-08-16,country,BD,11
+2026-08-16,country,PR,7
+2026-08-16,country,DE,11
+2026-08-16,country,TT,8
+2026-08-16,city,"Sunrise, Florida",32
+2026-08-16,city,"Miami Beach, Florida",31
+2026-08-16,city,"Miami, Florida",310
+2026-08-16,country,CA,61
 2026-08-16,country,US,5084
-2026-08-16,country,GH,4
+2026-08-16,country,TW,6
 2026-08-16,country,OM,5
-2026-08-16,city,"Miami Gardens, Florida",40
-2026-08-16,country,EG,5
-2026-08-16,country,ES,22
-2026-08-16,country,KN,4
-2026-08-16,country,AE,5
-2026-08-16,country,IN,154
-2026-08-16,country,ZA,5
-2026-08-16,country,KR,5
-2026-08-16,country,CL,11
-2026-08-16,country,AL,5
-2026-08-16,country,CO,22
 2026-08-16,country,FR,5
-2026-08-16,country,MX,24
-2026-08-16,country,VE,13
-2026-08-16,country,PA,4
-2026-08-16,country,NI,5
-2026-08-16,country,AR,15
-2026-08-16,country,PE,17
-2026-08-16,country,PH,9
-2026-08-16,country,VN,14
-2026-08-16,country,AZ,5
-2026-08-16,country,NG,23
-2026-08-16,city,"Temple Terrace, Florida",36
+2026-08-16,country,EG,5
 2026-08-16,country,RU,4
-2026-08-18,country,FR,6
-2026-08-18,country,BR,24
-2026-08-18,country,MA,10
-2026-08-18,city,"Cutler Bay, Florida",35
-2026-08-18,country,CO,21
-2026-08-18,country,ID,12
-2026-08-18,country,GB,15
-2026-08-18,country,DO,9
-2026-08-18,country,KE,13
-2026-08-18,country,OM,5
-2026-08-18,city,"Temple Terrace, Florida",34
-2026-08-18,country,TW,6
-2026-08-18,country,RU,4
-2026-08-18,country,CA,61
-2026-08-18,country,DZ,6
-2026-08-18,country,BD,11
-2026-08-18,country,DE,11
-2026-08-18,country,TT,8
-2026-08-18,city,"Sunrise, Florida",31
-2026-08-18,city,"Miami Beach, Florida",29
-2026-08-18,city,"Miami, Florida",323
-2026-08-18,country,EC,9
-2026-08-18,country,PR,5
-2026-08-18,country,HK,4
-2026-08-18,country,AE,5
-2026-08-18,country,GH,4
-2026-08-18,country,IR,6
-2026-08-18,country,JM,5
-2026-08-18,country,PA,4
-2026-08-18,country,AR,15
-2026-08-18,country,AU,4
-2026-08-18,country,NI,5
-2026-08-18,country,PH,9
-2026-08-18,country,VN,14
-2026-08-18,country,AZ,5
-2026-08-18,country,NG,23
-2026-08-18,city,"Bangalore, Karnataka",28
-2026-08-18,country,VE,13
-2026-08-18,country,US,5086
-2026-08-18,city,"Miami Gardens, Florida",39
-2026-08-18,country,MX,24
-2026-08-18,country,AL,5
-2026-08-18,country,PE,16
-2026-08-18,country,KR,5
-2026-08-18,country,ZA,5
-2026-08-18,country,IN,153
-2026-08-18,country,EG,6
-2026-08-18,country,CR,4
-2026-08-18,country,CL,11
-2026-08-18,country,ES,22
-2026-08-18,city,"Tamiami, Florida",95
-2026-08-18,city,"Richmond West, Florida",45
-2026-08-18,city,"North Miami Beach, Florida",31
-2026-08-18,gender,M,2673
-2026-08-18,city,"Coral Springs, Florida",35
-2026-08-18,city,"Ives Estates, Florida",25
-2026-08-18,city,"Glenvar Heights, Florida",21
-2026-08-18,city,"Princeton, Florida",44
-2026-08-18,city,"Hialeah, Florida",118
-2026-08-18,city,"Kendall, Florida",80
-2026-08-18,city,"Gainesville, Florida",37
-2026-08-18,city,"Olympia Heights, Florida",30
-2026-08-18,city,"Fort Lauderdale, Florida",39
-2026-08-18,age,25-34,2759
-2026-08-18,gender,F,1595
+2026-08-16,city,"Temple Terrace, Florida",36
+2026-08-16,country,NG,23
+2026-08-16,country,AZ,5
+2026-08-16,country,VN,14
+2026-08-16,country,PH,9
+2026-08-16,country,PE,17
+2026-08-16,country,AR,15
+2026-08-16,country,NI,5
+2026-08-16,country,PA,4
+2026-08-16,country,VE,13
+2026-08-16,country,MX,24
+2026-08-16,country,CO,22
+2026-08-16,country,AL,5
+2026-08-16,country,CL,11
+2026-08-16,country,KR,5
+2026-08-16,country,ZA,5
+2026-08-16,country,IN,154
+2026-08-16,country,AE,5
+2026-08-16,country,KN,4
+2026-08-16,country,ES,22
+2026-08-16,city,"Miami Gardens, Florida",40
+2026-08-16,country,IR,6
+2026-08-16,country,GH,4
+2026-08-16,city,"Homestead, Florida",49
+2026-08-16,city,"Coral Springs, Florida",36
+2026-08-16,city,"Sweetwater, Florida",436
+2026-08-16,city,"Princeton, Florida",43
+2026-08-16,city,"Olympia Heights, Florida",30
+2026-08-16,city,"Hialeah, Florida",116
+2026-08-16,city,"Kendall, Florida",76
+2026-08-16,city,"Coral Terrace, Florida",23
+2026-08-16,city,"Gainesville, Florida",40
+2026-08-16,city,"Davie, Florida",66
+2026-08-16,city,"New York, New York",88
+2026-08-16,gender,U,1548
+2026-08-16,gender,M,2669
+2026-08-16,city,"Ives Estates, Florida",27
+2026-08-16,age,35-44,668
+2026-08-16,country,PL,4
+2026-08-16,age,13-17,3
+2026-08-16,city,"Kendale Lakes, Florida",69
+2026-08-16,gender,F,1595
+2026-08-16,city,"Hollywood, Florida",58
+2026-08-16,age,45-54,294
+2026-08-16,age,65+,61
+2026-08-16,age,25-34,2757
+2026-08-16,city,"Miramar, Florida",123
+2026-08-16,city,"Doral, Florida",161
+2026-08-16,age,55-64,142
+2026-08-16,country,TR,6
+2026-08-16,city,"Seattle, Washington",60
+2026-08-16,city,"The Crossings, Florida",34
+2026-08-16,city,"Westchester, Florida",51
+2026-08-16,city,"Plantation, Florida",39
+2026-08-16,city,"Tampa, Florida",28
+2026-08-16,city,"Orlando, Florida",26
+2026-08-16,city,"South Miami Heights, Florida",24
+2026-08-16,city,"Charlotte, North Carolina",29
+2026-08-16,city,"Richmond West, Florida",46
+2026-08-16,city,"Tamiami, Florida",91
+2026-08-16,city,"Weston, Florida",47
+2026-08-16,age,18-24,1887
+2026-08-16,city,"Coral Gables, Florida",25
+2026-08-16,city,"North Miami Beach, Florida",34
+2026-08-16,city,"Union Park, Florida",41
+2026-08-16,city,"Pembroke Pines, Florida",121
+2026-08-16,city,"Fort Lauderdale, Florida",37
+2026-08-16,city,"North Miami, Florida",41
+2026-08-16,city,"Country Club, Florida",53
+2026-08-16,city,"West Kendall, Florida",68
+2026-08-16,city,"Miami Lakes, Florida",50
+2026-08-16,city,"The Hammocks, Florida",95
+2026-08-16,city,"San Francisco, California",33
 2026-08-18,city,"Kendale Lakes, Florida",69
 2026-08-18,age,13-17,4
 2026-08-18,age,18-24,1884
 2026-08-18,city,"Miami Lakes, Florida",49
-2026-08-18,age,35-44,669
+2026-08-18,city,"Miramar, Florida",122
 2026-08-18,age,45-54,294
 2026-08-18,age,55-64,142
-2026-08-18,city,"Miramar, Florida",122
+2026-08-18,gender,F,1595
+2026-08-18,age,35-44,669
+2026-08-18,age,25-34,2759
+2026-08-18,city,"Hialeah, Florida",118
+2026-08-18,city,"Olympia Heights, Florida",30
+2026-08-18,city,"Gainesville, Florida",37
+2026-08-18,city,"Kendall, Florida",80
 2026-08-18,gender,U,1545
+2026-08-18,city,"Princeton, Florida",44
+2026-08-18,city,"Glenvar Heights, Florida",21
+2026-08-18,city,"Ives Estates, Florida",25
+2026-08-18,city,"Coral Springs, Florida",35
+2026-08-18,gender,M,2673
+2026-08-18,city,"North Miami Beach, Florida",31
+2026-08-18,city,"Richmond West, Florida",45
+2026-08-18,city,"Fort Lauderdale, Florida",39
 2026-08-18,country,TR,6
-2026-08-18,city,"Davie, Florida",65
-2026-08-18,city,"Seattle, Washington",60
-2026-08-18,city,"The Hammocks, Florida",91
-2026-08-18,city,"Charlotte, North Carolina",29
 2026-08-18,city,"Sweetwater, Florida",419
-2026-08-18,city,"Weston, Florida",46
-2026-08-18,city,"The Crossings, Florida",32
-2026-08-18,city,"Westchester, Florida",47
-2026-08-18,city,"Plantation, Florida",41
-2026-08-18,city,"Hollywood, Florida",61
-2026-08-18,city,"South Miami Heights, Florida",23
-2026-08-18,city,"New York, New York",86
-2026-08-18,city,"Orlando, Florida",23
-2026-08-18,city,"Tampa, Florida",32
-2026-08-18,city,"Union Park, Florida",42
-2026-08-18,city,"San Francisco, California",35
-2026-08-18,city,"Doral, Florida",165
-2026-08-18,city,"West Kendall, Florida",73
-2026-08-18,city,"Coral Gables, Florida",26
-2026-08-18,city,"Country Club, Florida",55
-2026-08-18,city,"North Miami, Florida",43
-2026-08-18,city,"Homestead, Florida",45
-2026-08-18,city,"Pembroke Pines, Florida",123
+2026-08-18,city,"Seattle, Washington",60
+2026-08-18,city,"Tamiami, Florida",95
 2026-08-18,age,65+,61
+2026-08-18,city,"Pembroke Pines, Florida",123
+2026-08-18,city,"Homestead, Florida",45
+2026-08-18,city,"North Miami, Florida",43
+2026-08-18,city,"Country Club, Florida",55
+2026-08-18,city,"Coral Gables, Florida",26
+2026-08-18,city,"West Kendall, Florida",73
+2026-08-18,city,"Doral, Florida",165
+2026-08-18,city,"San Francisco, California",35
+2026-08-18,city,"Davie, Florida",65
+2026-08-18,city,"Union Park, Florida",42
+2026-08-18,city,"Orlando, Florida",23
 2026-08-18,country,PK,20
-2026-08-19,age,65+,61
-2026-08-19,country,PK,20
-2026-08-19,age,13-17,4
-2026-08-19,age,18-24,1885
-2026-08-19,city,"Kendale Lakes, Florida",69
-2026-08-19,age,35-44,671
-2026-08-19,age,45-54,294
-2026-08-19,age,55-64,142
-2026-08-19,age,25-34,2759
-2026-08-19,city,"Fort Lauderdale, Florida",39
-2026-08-19,gender,F,1597
-2026-08-19,gender,M,2675
-2026-08-19,gender,U,1544
-2026-08-19,city,"Atlanta, Georgia",21
-2026-08-19,city,"Gainesville, Florida",36
-2026-08-19,city,"Kendall, Florida",79
-2026-08-19,city,"Hialeah, Florida",123
-2026-08-19,city,"Olympia Heights, Florida",29
-2026-08-19,city,"Princeton, Florida",44
-2026-08-19,city,"Glenvar Heights, Florida",22
-2026-08-19,city,"Seattle, Washington",60
-2026-08-19,city,"Coral Gables, Florida",24
-2026-08-19,city,"Ives Estates, Florida",25
-2026-08-19,city,"Davie, Florida",63
-2026-08-19,city,"West Kendall, Florida",72
-2026-08-19,city,"The Hammocks, Florida",92
-2026-08-19,city,"New York, New York",86
-2026-08-19,city,"Sweetwater, Florida",416
-2026-08-19,city,"North Miami Beach, Florida",30
-2026-08-19,city,"Temple Terrace, Florida",34
-2026-08-19,city,"Union Park, Florida",42
-2026-08-19,city,"Pembroke Pines, Florida",124
-2026-08-19,city,"Homestead, Florida",50
-2026-08-19,city,"North Miami, Florida",42
-2026-08-19,city,"Country Club, Florida",55
-2026-08-19,city,"San Francisco, California",35
-2026-08-19,city,"Coral Springs, Florida",34
-2026-08-19,country,TR,6
-2026-08-19,city,"Tamiami, Florida",96
-2026-08-19,city,"Charlotte, North Carolina",29
-2026-08-19,city,"Richmond West, Florida",45
-2026-08-19,city,"South Miami Heights, Florida",26
-2026-08-19,city,"Hollywood, Florida",62
-2026-08-19,city,"Tampa, Florida",33
-2026-08-19,city,"Plantation, Florida",42
-2026-08-19,city,"Westchester, Florida",47
-2026-08-19,city,"The Crossings, Florida",32
-2026-08-19,city,"Weston, Florida",47
-2026-08-19,city,"Doral, Florida",165
-2026-08-19,city,"Miami Lakes, Florida",48
-2026-08-19,city,"Bangalore, Karnataka",28
-2026-08-19,country,VE,13
-2026-08-19,country,NI,5
-2026-08-19,city,"Miami Beach, Florida",29
-2026-08-19,city,"Sunrise, Florida",32
-2026-08-19,country,TT,8
-2026-08-19,country,DE,11
-2026-08-19,country,PR,5
-2026-08-19,country,BD,11
-2026-08-19,country,RU,4
-2026-08-19,country,JM,5
-2026-08-19,country,CA,61
-2026-08-19,country,TW,6
-2026-08-19,city,"Miami, Florida",320
+2026-08-18,city,"South Miami Heights, Florida",23
+2026-08-18,city,"Hollywood, Florida",61
+2026-08-18,city,"Plantation, Florida",41
+2026-08-18,city,"Westchester, Florida",47
+2026-08-18,city,"The Crossings, Florida",32
+2026-08-18,city,"Weston, Florida",46
+2026-08-18,city,"Charlotte, North Carolina",29
+2026-08-18,city,"The Hammocks, Florida",91
+2026-08-18,city,"Tampa, Florida",32
+2026-08-18,city,"New York, New York",86
+2026-08-18,country,ES,22
+2026-08-18,country,CR,4
+2026-08-18,city,"Miami, Florida",323
+2026-08-18,city,"Miami Beach, Florida",29
+2026-08-18,city,"Sunrise, Florida",31
+2026-08-18,country,TT,8
+2026-08-18,country,DE,11
+2026-08-18,country,BD,11
+2026-08-18,country,DZ,6
+2026-08-18,country,CA,61
+2026-08-18,country,TW,6
+2026-08-18,city,"Temple Terrace, Florida",34
+2026-08-18,country,OM,5
+2026-08-18,country,KE,13
+2026-08-18,country,DO,9
+2026-08-18,country,GB,15
+2026-08-18,country,ID,12
+2026-08-18,country,CO,21
+2026-08-18,city,"Cutler Bay, Florida",35
+2026-08-18,country,MA,10
+2026-08-18,country,BR,24
+2026-08-18,country,FR,6
+2026-08-18,country,CL,11
+2026-08-18,country,EC,9
+2026-08-18,country,PR,5
+2026-08-18,country,RU,4
+2026-08-18,country,AE,5
+2026-08-18,country,HK,4
+2026-08-18,country,IN,153
+2026-08-18,country,ZA,5
+2026-08-18,country,KR,5
+2026-08-18,country,PE,16
+2026-08-18,country,AL,5
+2026-08-18,country,MX,24
+2026-08-18,city,"Miami Gardens, Florida",39
+2026-08-18,country,US,5086
+2026-08-18,country,VE,13
+2026-08-18,city,"Bangalore, Karnataka",28
+2026-08-18,country,EG,6
+2026-08-18,country,AZ,5
+2026-08-18,country,NG,23
+2026-08-18,country,IR,6
+2026-08-18,country,JM,5
+2026-08-18,country,PA,4
+2026-08-18,country,AR,15
+2026-08-18,country,GH,4
+2026-08-18,country,NI,5
+2026-08-18,country,PH,9
+2026-08-18,country,VN,14
+2026-08-18,country,AU,4
 2026-08-19,country,BR,24
-2026-08-19,country,GB,15
-2026-08-19,city,"Miramar, Florida",124
-2026-08-19,country,EC,9
-2026-08-19,country,OM,5
-2026-08-19,city,"Cutler Bay, Florida",32
-2026-08-19,country,ID,12
 2026-08-19,country,KE,13
+2026-08-19,country,ID,12
+2026-08-19,city,"Cutler Bay, Florida",32
+2026-08-19,country,OM,5
+2026-08-19,country,EC,9
 2026-08-19,country,DZ,6
+2026-08-19,city,"Miramar, Florida",124
+2026-08-19,country,GB,15
+2026-08-19,city,"Miami, Florida",320
+2026-08-19,country,PR,5
+2026-08-19,country,CA,61
+2026-08-19,country,JM,5
+2026-08-19,country,RU,4
+2026-08-19,country,BD,11
+2026-08-19,country,DE,11
+2026-08-19,country,TT,8
+2026-08-19,city,"Sunrise, Florida",32
+2026-08-19,city,"Miami Beach, Florida",29
+2026-08-19,country,NI,5
 2026-08-19,country,DO,9
+2026-08-19,country,TW,6
 2026-08-19,country,FR,6
-2026-08-19,country,MA,10
+2026-08-19,country,VE,13
 2026-08-19,country,CO,22
-2026-08-19,country,ES,23
-2026-08-19,country,EG,6
-2026-08-19,country,KN,4
-2026-08-19,country,AE,5
-2026-08-19,country,IN,153
-2026-08-19,country,ZA,5
-2026-08-19,country,KR,5
-2026-08-19,country,AL,5
-2026-08-19,country,MX,24
-2026-08-19,country,IR,6
-2026-08-19,country,US,5086
-2026-08-19,country,CL,11
-2026-08-19,country,NG,23
-2026-08-19,country,AZ,5
-2026-08-19,country,VN,14
-2026-08-19,country,JP,4
-2026-08-19,country,PH,9
-2026-08-19,city,"Miami Gardens, Florida",38
-2026-08-19,country,AU,4
-2026-08-19,country,AR,15
-2026-08-19,country,PA,4
 2026-08-19,country,PE,16
+2026-08-19,country,PA,4
+2026-08-19,country,AR,15
+2026-08-19,country,AU,4
+2026-08-19,city,"Miami Gardens, Florida",38
+2026-08-19,country,PH,9
+2026-08-19,country,JP,4
+2026-08-19,country,VN,14
+2026-08-19,country,AZ,5
+2026-08-19,country,NG,23
+2026-08-19,country,MA,10
+2026-08-19,country,CL,11
+2026-08-19,country,IR,6
+2026-08-19,country,MX,24
+2026-08-19,country,AL,5
+2026-08-19,country,KR,5
+2026-08-19,country,ZA,5
+2026-08-19,country,IN,153
+2026-08-19,country,AE,5
+2026-08-19,country,KN,4
+2026-08-19,country,EG,6
+2026-08-19,country,ES,23
+2026-08-19,country,US,5086
+2026-08-19,city,"Bangalore, Karnataka",28
 2026-08-19,country,GH,4
-2026-08-24,country,KE,13
-2026-08-24,country,ID,12
-2026-08-24,country,GB,15
-2026-08-24,country,JP,4
-2026-08-24,country,EC,9
-2026-08-24,country,FR,6
-2026-08-24,city,"North Miami Beach, Florida",29
-2026-08-24,country,DZ,6
-2026-08-24,country,OM,5
-2026-08-24,country,MA,10
-2026-08-24,city,"Miami Beach, Florida",31
-2026-08-24,country,DO,9
-2026-08-24,city,"Cutler Bay, Florida",31
-2026-08-24,country,TW,6
-2026-08-24,country,HK,4
-2026-08-24,country,BD,10
-2026-08-24,country,PR,10
-2026-08-24,country,DE,11
-2026-08-24,country,TT,8
-2026-08-24,city,"Sunrise, Florida",34
-2026-08-24,country,CA,61
-2026-08-24,country,BR,24
-2026-08-24,country,JM,5
-2026-08-24,country,CR,4
-2026-08-24,country,MX,24
-2026-08-24,city,"Miami, Florida",319
-2026-08-24,country,PE,17
-2026-08-24,country,VE,13
-2026-08-24,country,PA,4
-2026-08-24,country,AR,15
-2026-08-24,country,NI,5
-2026-08-24,country,PH,9
-2026-08-24,country,VN,14
-2026-08-24,country,AZ,5
-2026-08-24,country,NG,23
-2026-08-24,city,"Miami Gardens, Florida",38
-2026-08-24,country,US,5106
-2026-08-24,country,CL,10
-2026-08-24,country,CO,23
-2026-08-24,country,PK,19
-2026-08-24,country,AL,5
-2026-08-24,country,IR,6
-2026-08-24,country,ZA,5
-2026-08-24,country,KR,5
-2026-08-24,country,IN,155
-2026-08-24,country,AE,5
-2026-08-24,country,KN,4
-2026-08-24,country,ES,23
-2026-08-24,city,"Bangalore, Karnataka",27
-2026-08-24,country,EG,6
-2026-08-24,age,45-54,295
-2026-08-24,gender,F,1605
-2026-08-24,city,"Coral Springs, Florida",35
-2026-08-24,city,"Ives Estates, Florida",25
-2026-08-24,city,"Glenvar Heights, Florida",24
-2026-08-24,city,"Princeton, Florida",43
-2026-08-24,city,"Olympia Heights, Florida",30
-2026-08-24,city,"Hialeah, Florida",127
-2026-08-24,city,"Gainesville, Florida",40
-2026-08-24,city,"Davie, Florida",64
-2026-08-24,gender,M,2682
-2026-08-24,country,TR,6
-2026-08-24,city,"Kendall, Florida",77
-2026-08-24,age,13-17,4
-2026-08-24,age,55-64,143
+2026-08-19,city,"Doral, Florida",165
+2026-08-19,city,"Coral Gables, Florida",24
+2026-08-19,city,"Seattle, Washington",60
+2026-08-19,city,"Glenvar Heights, Florida",22
+2026-08-19,city,"Princeton, Florida",44
+2026-08-19,city,"Olympia Heights, Florida",29
+2026-08-19,city,"Hialeah, Florida",123
+2026-08-19,city,"Kendall, Florida",79
+2026-08-19,city,"Gainesville, Florida",36
+2026-08-19,city,"Atlanta, Georgia",21
+2026-08-19,gender,U,1544
+2026-08-19,city,"Ives Estates, Florida",25
+2026-08-19,gender,M,2675
+2026-08-19,city,"Fort Lauderdale, Florida",39
+2026-08-19,age,25-34,2759
+2026-08-19,age,55-64,142
+2026-08-19,age,45-54,294
+2026-08-19,age,35-44,671
+2026-08-19,city,"Kendale Lakes, Florida",69
+2026-08-19,age,18-24,1885
+2026-08-19,age,13-17,4
+2026-08-19,country,PK,20
+2026-08-19,age,65+,61
+2026-08-19,gender,F,1597
+2026-08-19,city,"Davie, Florida",63
+2026-08-19,city,"Miami Lakes, Florida",48
+2026-08-19,city,"The Hammocks, Florida",92
+2026-08-19,city,"Weston, Florida",47
+2026-08-19,city,"The Crossings, Florida",32
+2026-08-19,city,"Westchester, Florida",47
+2026-08-19,city,"Plantation, Florida",42
+2026-08-19,city,"Tampa, Florida",33
+2026-08-19,city,"Hollywood, Florida",62
+2026-08-19,city,"West Kendall, Florida",72
+2026-08-19,city,"Richmond West, Florida",45
+2026-08-19,city,"Charlotte, North Carolina",29
+2026-08-19,city,"Tamiami, Florida",96
+2026-08-19,country,TR,6
+2026-08-19,city,"South Miami Heights, Florida",26
+2026-08-19,city,"San Francisco, California",35
+2026-08-19,city,"Country Club, Florida",55
+2026-08-19,city,"North Miami, Florida",42
+2026-08-19,city,"Homestead, Florida",50
+2026-08-19,city,"Pembroke Pines, Florida",124
+2026-08-19,city,"Union Park, Florida",42
+2026-08-19,city,"Temple Terrace, Florida",34
+2026-08-19,city,"North Miami Beach, Florida",30
+2026-08-19,city,"Sweetwater, Florida",416
+2026-08-19,city,"New York, New York",86
+2026-08-19,city,"Coral Springs, Florida",34
 2026-08-24,city,"Kendale Lakes, Florida",64
 2026-08-24,city,"Seattle, Washington",58
 2026-08-24,country,PL,4
 2026-08-24,city,"Miami Lakes, Florida",46
-2026-08-24,age,18-24,1891
+2026-08-24,age,65+,61
 2026-08-24,age,25-34,2773
 2026-08-24,age,35-44,676
 2026-08-24,city,"New York, New York",87
-2026-08-24,age,65+,61
+2026-08-24,age,18-24,1891
+2026-08-24,age,55-64,143
+2026-08-24,city,"Coral Springs, Florida",35
+2026-08-24,city,"Kendall, Florida",77
+2026-08-24,country,TR,6
+2026-08-24,gender,M,2682
+2026-08-24,city,"Davie, Florida",64
+2026-08-24,city,"Gainesville, Florida",40
+2026-08-24,city,"Hialeah, Florida",127
+2026-08-24,city,"Olympia Heights, Florida",30
+2026-08-24,city,"Princeton, Florida",43
+2026-08-24,city,"Glenvar Heights, Florida",24
+2026-08-24,city,"Ives Estates, Florida",25
 2026-08-24,city,"Coral Gables, Florida",27
+2026-08-24,age,13-17,4
 2026-08-24,gender,U,1556
-2026-08-24,city,"Fort Lauderdale, Florida",36
-2026-08-24,city,"San Francisco, California",36
-2026-08-24,city,"The Hammocks, Florida",89
-2026-08-24,city,"Weston, Florida",51
-2026-08-24,city,"The Crossings, Florida",34
-2026-08-24,city,"Westchester, Florida",48
-2026-08-24,city,"Plantation, Florida",44
-2026-08-24,city,"Tampa, Florida",32
-2026-08-24,city,"Orlando, Florida",23
-2026-08-24,city,"Hollywood, Florida",61
-2026-08-24,city,"South Miami Heights, Florida",25
 2026-08-24,city,"Charlotte, North Carolina",30
-2026-08-24,city,"Richmond West, Florida",44
-2026-08-24,city,"Miramar, Florida",126
-2026-08-24,city,"Sweetwater, Florida",426
-2026-08-24,city,"Union Park, Florida",41
-2026-08-24,city,"Pembroke Pines, Florida",125
-2026-08-24,city,"Homestead, Florida",51
-2026-08-24,city,"North Miami, Florida",37
-2026-08-24,city,"Temple Terrace, Florida",33
-2026-08-24,city,"West Kendall, Florida",77
-2026-08-24,city,"Doral, Florida",160
-2026-08-24,city,"Tamiami, Florida",98
+2026-08-24,city,"San Francisco, California",36
+2026-08-24,gender,F,1605
 2026-08-24,city,"Country Club, Florida",53
-2026-08-31,age,65+,63
-2026-08-31,city,"Seattle, Washington",58
-2026-08-31,country,PL,4
-2026-08-31,age,13-17,7
-2026-08-31,age,18-24,1959
-2026-08-31,age,25-34,2826
-2026-08-31,age,35-44,687
-2026-08-31,city,"Kendale Lakes, Florida",74
-2026-08-31,age,45-54,303
-2026-08-31,age,55-64,143
-2026-08-31,gender,F,1643
-2026-08-31,city,"Kendall, Florida",78
-2026-08-31,gender,U,1610
-2026-08-31,city,"Davie, Florida",71
-2026-08-31,city,"Gainesville, Florida",46
-2026-08-31,city,"Hialeah, Florida",128
-2026-08-31,city,"Olympia Heights, Florida",26
-2026-08-31,city,"Princeton, Florida",44
-2026-08-31,city,"Glenvar Heights, Florida",23
-2026-08-31,city,"Ives Estates, Florida",29
-2026-08-31,city,"Coral Springs, Florida",32
+2026-08-24,city,"Tamiami, Florida",98
+2026-08-24,city,"Doral, Florida",160
+2026-08-24,city,"West Kendall, Florida",77
+2026-08-24,city,"Temple Terrace, Florida",33
+2026-08-24,city,"North Miami, Florida",37
+2026-08-24,city,"Homestead, Florida",51
+2026-08-24,city,"Pembroke Pines, Florida",125
+2026-08-24,city,"Union Park, Florida",41
+2026-08-24,city,"Fort Lauderdale, Florida",36
+2026-08-24,city,"Sweetwater, Florida",426
+2026-08-24,city,"Richmond West, Florida",44
+2026-08-24,city,"South Miami Heights, Florida",25
+2026-08-24,city,"Hollywood, Florida",61
+2026-08-24,city,"Orlando, Florida",23
+2026-08-24,city,"Tampa, Florida",32
+2026-08-24,city,"Plantation, Florida",44
+2026-08-24,city,"Westchester, Florida",48
+2026-08-24,city,"The Crossings, Florida",34
+2026-08-24,city,"Weston, Florida",51
+2026-08-24,city,"The Hammocks, Florida",89
+2026-08-24,city,"Miramar, Florida",126
+2026-08-24,age,45-54,295
+2026-08-24,country,EG,6
+2026-08-24,city,"Bangalore, Karnataka",27
+2026-08-24,country,BR,24
+2026-08-24,country,CA,61
+2026-08-24,city,"Sunrise, Florida",34
+2026-08-24,country,TT,8
+2026-08-24,country,DE,11
+2026-08-24,country,PR,10
+2026-08-24,country,BD,10
+2026-08-24,country,HK,4
+2026-08-24,country,TW,6
+2026-08-24,city,"Cutler Bay, Florida",31
+2026-08-24,country,DO,9
+2026-08-24,city,"Miami Beach, Florida",31
+2026-08-24,country,MA,10
+2026-08-24,country,OM,5
+2026-08-24,country,DZ,6
+2026-08-24,city,"North Miami Beach, Florida",29
+2026-08-24,country,FR,6
+2026-08-24,country,EC,9
+2026-08-24,country,JP,4
+2026-08-24,country,GB,15
+2026-08-24,country,ID,12
+2026-08-24,country,JM,5
+2026-08-24,country,CR,4
+2026-08-24,country,KE,13
+2026-08-24,city,"Miami, Florida",319
+2026-08-24,country,MX,24
+2026-08-24,country,ES,23
+2026-08-24,country,KN,4
+2026-08-24,country,AE,5
+2026-08-24,country,IN,155
+2026-08-24,country,KR,5
+2026-08-24,country,ZA,5
+2026-08-24,country,AL,5
+2026-08-24,country,PK,19
+2026-08-24,country,CO,23
+2026-08-24,country,CL,10
+2026-08-24,country,IR,6
+2026-08-24,city,"Miami Gardens, Florida",38
+2026-08-24,country,NG,23
+2026-08-24,country,AZ,5
+2026-08-24,country,PE,17
+2026-08-24,country,VN,14
+2026-08-24,country,PH,9
+2026-08-24,country,NI,5
+2026-08-24,country,AR,15
+2026-08-24,country,PA,4
+2026-08-24,country,VE,13
+2026-08-24,country,US,5106
+2026-08-31,country,BR,25
+2026-08-31,country,MA,11
+2026-08-31,country,DZ,6
+2026-08-31,country,EC,8
+2026-08-31,country,ID,12
+2026-08-31,country,GB,19
+2026-08-31,country,OM,4
+2026-08-31,country,DO,10
+2026-08-31,country,KE,14
+2026-08-31,country,RU,5
+2026-08-31,country,TW,6
+2026-08-31,country,JM,5
+2026-08-31,country,PR,11
+2026-08-31,country,BD,10
+2026-08-31,country,DE,11
+2026-08-31,country,TT,8
+2026-08-31,city,"Sunrise, Florida",33
+2026-08-31,city,"Miami Beach, Florida",32
+2026-08-31,city,"Miami, Florida",324
+2026-08-31,country,CA,63
+2026-08-31,city,"North Miami Beach, Florida",32
+2026-08-31,country,US,5226
+2026-08-31,country,CR,4
+2026-08-31,country,AL,5
+2026-08-31,country,FR,6
+2026-08-31,city,"Bangalore, Karnataka",28
+2026-08-31,country,NI,5
+2026-08-31,country,NG,23
+2026-08-31,country,AZ,6
+2026-08-31,country,VN,18
+2026-08-31,country,PH,9
+2026-08-31,country,PE,20
+2026-08-31,country,AU,4
+2026-08-31,country,AR,15
+2026-08-31,country,VE,15
+2026-08-31,country,PK,19
+2026-08-31,country,GH,4
+2026-08-31,country,CO,25
+2026-08-31,country,CL,10
+2026-08-31,country,EG,6
+2026-08-31,country,KR,5
+2026-08-31,country,ZA,5
+2026-08-31,country,IN,156
+2026-08-31,country,AE,5
+2026-08-31,country,IL,4
+2026-08-31,country,ES,23
+2026-08-31,country,IR,6
+2026-08-31,country,MX,24
+2026-08-31,city,"Miami Gardens, Florida",43
+2026-08-31,city,"Cutler Bay, Florida",36
+2026-08-31,city,"Sweetwater, Florida",417
 2026-08-31,city,"Miami Lakes, Florida",52
+2026-08-31,city,"Coral Springs, Florida",32
+2026-08-31,city,"Ives Estates, Florida",29
+2026-08-31,city,"Glenvar Heights, Florida",23
+2026-08-31,city,"Princeton, Florida",44
+2026-08-31,city,"Olympia Heights, Florida",26
+2026-08-31,city,"Hialeah, Florida",128
+2026-08-31,city,"Gainesville, Florida",46
+2026-08-31,city,"Davie, Florida",71
+2026-08-31,city,"New York, New York",87
 2026-08-31,gender,M,2735
+2026-08-31,city,"Kendall, Florida",78
+2026-08-31,age,55-64,143
+2026-08-31,age,45-54,303
+2026-08-31,city,"Kendale Lakes, Florida",74
+2026-08-31,age,35-44,687
+2026-08-31,age,25-34,2826
+2026-08-31,age,18-24,1959
+2026-08-31,age,13-17,7
+2026-08-31,country,PL,4
+2026-08-31,city,"Seattle, Washington",58
+2026-08-31,age,65+,63
+2026-08-31,gender,F,1643
 2026-08-31,city,"Miramar, Florida",138
-2026-08-31,city,"Fort Lauderdale, Florida",38
+2026-08-31,gender,U,1610
 2026-08-31,city,"The Hammocks, Florida",98
-2026-08-31,country,TR,6
+2026-08-31,city,"Fort Lauderdale, Florida",38
+2026-08-31,city,"Weston, Florida",50
+2026-08-31,city,"The Crossings, Florida",35
+2026-08-31,city,"Westchester, Florida",56
+2026-08-31,city,"Plantation, Florida",42
+2026-08-31,city,"Tampa, Florida",34
+2026-08-31,city,"Orlando, Florida",27
+2026-08-31,city,"South Miami Heights, Florida",26
+2026-08-31,city,"Charlotte, North Carolina",28
+2026-08-31,city,"Richmond West, Florida",46
+2026-08-31,city,"Tamiami, Florida",102
+2026-08-31,city,"Hollywood, Florida",59
+2026-08-31,city,"Doral, Florida",162
+2026-08-31,city,"San Francisco, California",37
 2026-08-31,city,"Coral Gables, Florida",29
 2026-08-31,city,"Temple Terrace, Florida",29
 2026-08-31,city,"Union Park, Florida",35
 2026-08-31,city,"Pembroke Pines, Florida",125
-2026-08-31,city,"Homestead, Florida",50
+2026-08-31,country,TR,6
 2026-08-31,city,"North Miami, Florida",41
 2026-08-31,city,"Country Club, Florida",55
 2026-08-31,city,"West Kendall, Florida",79
-2026-08-31,city,"Doral, Florida",162
-2026-08-31,city,"San Francisco, California",37
-2026-08-31,city,"Tamiami, Florida",102
-2026-08-31,city,"Richmond West, Florida",46
-2026-08-31,city,"Charlotte, North Carolina",28
-2026-08-31,city,"South Miami Heights, Florida",26
-2026-08-31,city,"Hollywood, Florida",59
-2026-08-31,city,"Orlando, Florida",27
-2026-08-31,city,"Tampa, Florida",34
-2026-08-31,city,"Plantation, Florida",42
-2026-08-31,city,"Westchester, Florida",56
-2026-08-31,city,"The Crossings, Florida",35
-2026-08-31,city,"Weston, Florida",50
-2026-08-31,city,"Sweetwater, Florida",417
-2026-08-31,city,"New York, New York",87
-2026-08-31,city,"Miami Gardens, Florida",43
-2026-08-31,city,"Bangalore, Karnataka",28
-2026-08-31,country,TW,6
-2026-08-31,country,CA,63
-2026-08-31,city,"Miami, Florida",324
-2026-08-31,city,"Miami Beach, Florida",32
-2026-08-31,city,"Sunrise, Florida",33
-2026-08-31,country,TT,8
-2026-08-31,country,DE,11
-2026-08-31,country,BD,10
-2026-08-31,country,PR,11
-2026-08-31,country,JM,5
-2026-08-31,country,US,5226
-2026-08-31,country,RU,5
-2026-08-31,country,DO,10
-2026-08-31,country,BR,25
-2026-08-31,country,MA,11
-2026-08-31,country,DZ,6
-2026-08-31,country,KE,14
-2026-08-31,country,ID,12
-2026-08-31,country,GB,19
-2026-08-31,country,OM,4
-2026-08-31,country,EC,8
-2026-08-31,city,"North Miami Beach, Florida",32
-2026-08-31,city,"Cutler Bay, Florida",36
-2026-08-31,country,PK,19
-2026-08-31,country,FR,6
-2026-08-31,country,IR,6
-2026-08-31,country,ES,23
-2026-08-31,country,IL,4
-2026-08-31,country,AE,5
-2026-08-31,country,IN,156
-2026-08-31,country,ZA,5
-2026-08-31,country,KR,5
-2026-08-31,country,EG,6
-2026-08-31,country,CL,10
-2026-08-31,country,AL,5
-2026-08-31,country,CO,25
-2026-08-31,country,MX,24
-2026-08-31,country,GH,4
-2026-08-31,country,VE,15
-2026-08-31,country,AR,15
-2026-08-31,country,AU,4
-2026-08-31,country,PE,20
-2026-08-31,country,PH,9
-2026-08-31,country,VN,18
-2026-08-31,country,AZ,6
-2026-08-31,country,NG,23
-2026-08-31,country,NI,5
-2026-08-31,country,CR,4
-2026-09-03,country,MA,11
-2026-09-03,country,FR,6
-2026-09-03,country,BR,25
-2026-09-03,country,DZ,6
-2026-09-03,country,PK,20
-2026-09-03,country,ID,12
-2026-09-03,country,GB,19
-2026-09-03,country,OM,4
-2026-09-03,country,KE,14
-2026-09-03,country,DO,11
-2026-09-03,city,"Cutler Bay, Florida",36
-2026-09-03,country,RU,5
-2026-09-03,country,JM,5
-2026-09-03,country,HK,4
-2026-09-03,country,PR,12
-2026-09-03,country,BD,10
-2026-09-03,country,DE,11
-2026-09-03,country,TT,7
-2026-09-03,city,"Miami Beach, Florida",34
-2026-09-03,city,"Sunrise, Florida",32
-2026-09-03,city,"Miami, Florida",324
+2026-08-31,city,"Homestead, Florida",50
+2026-09-03,age,55-64,143
+2026-09-03,city,"Miami Lakes, Florida",48
+2026-09-03,city,"Kendale Lakes, Florida",77
+2026-09-03,country,PL,4
+2026-09-03,age,13-17,9
+2026-09-03,age,18-24,1971
+2026-09-03,age,25-34,2831
+2026-09-03,age,35-44,687
+2026-09-03,age,45-54,305
+2026-09-03,age,65+,63
+2026-09-03,city,"Fort Lauderdale, Florida",37
+2026-09-03,gender,M,2745
+2026-09-03,gender,U,1618
+2026-09-03,city,"Davie, Florida",71
+2026-09-03,city,"Gainesville, Florida",54
+2026-09-03,city,"Kendall, Florida",81
+2026-09-03,city,"Hialeah, Florida",130
+2026-09-03,city,"Olympia Heights, Florida",25
+2026-09-03,city,"Princeton, Florida",46
+2026-09-03,city,"Ives Estates, Florida",29
+2026-09-03,city,"Coral Springs, Florida",35
+2026-09-03,gender,F,1646
+2026-09-03,city,"Temple Terrace, Florida",31
+2026-09-03,country,TR,6
+2026-09-03,city,"The Hammocks, Florida",98
+2026-09-03,city,"Seattle, Washington",58
+2026-09-03,city,"Coral Gables, Florida",30
+2026-09-03,city,"North Miami Beach, Florida",33
+2026-09-03,city,"Pembroke Pines, Florida",125
+2026-09-03,city,"Homestead, Florida",50
+2026-09-03,city,"Austin, Texas",22
+2026-09-03,city,"North Miami, Florida",41
+2026-09-03,city,"Country Club, Florida",57
+2026-09-03,city,"West Kendall, Florida",77
+2026-09-03,city,"Doral, Florida",161
+2026-09-03,city,"San Francisco, California",35
+2026-09-03,city,"Tamiami, Florida",106
+2026-09-03,city,"Richmond West, Florida",46
+2026-09-03,city,"Charlotte, North Carolina",28
+2026-09-03,city,"South Miami Heights, Florida",24
+2026-09-03,city,"Hollywood, Florida",61
+2026-09-03,city,"Orlando, Florida",26
+2026-09-03,city,"Tampa, Florida",32
+2026-09-03,city,"Plantation, Florida",41
+2026-09-03,city,"Westchester, Florida",56
+2026-09-03,city,"The Crossings, Florida",35
+2026-09-03,city,"Weston, Florida",49
+2026-09-03,city,"Sweetwater, Florida",428
+2026-09-03,city,"New York, New York",85
+2026-09-03,city,"Miramar, Florida",137
+2026-09-03,city,"Bangalore, Karnataka",27
 2026-09-03,country,TW,6
+2026-09-03,city,"Miami, Florida",324
+2026-09-03,city,"Sunrise, Florida",32
+2026-09-03,city,"Miami Beach, Florida",34
+2026-09-03,country,TT,7
+2026-09-03,country,DE,11
+2026-09-03,country,BD,10
+2026-09-03,country,PR,12
+2026-09-03,country,HK,4
+2026-09-03,city,"Union Park, Florida",35
 2026-09-03,country,EC,8
+2026-09-03,country,RU,5
+2026-09-03,country,DO,11
+2026-09-03,country,KE,14
+2026-09-03,country,OM,4
+2026-09-03,country,GB,19
+2026-09-03,country,ID,12
+2026-09-03,country,PK,20
+2026-09-03,country,DZ,6
+2026-09-03,country,BR,25
+2026-09-03,country,FR,6
+2026-09-03,country,MA,11
+2026-09-03,city,"Cutler Bay, Florida",36
 2026-09-03,country,CO,24
-2026-09-03,country,US,5244
+2026-09-03,country,JM,5
 2026-09-03,city,"Miami Gardens, Florida",43
-2026-09-03,country,NI,5
+2026-09-03,country,US,5244
+2026-09-03,country,CR,4
+2026-09-03,country,EG,6
+2026-09-03,country,AE,6
+2026-09-03,country,IN,156
+2026-09-03,country,KR,5
+2026-09-03,country,ZA,5
+2026-09-03,country,CL,9
+2026-09-03,country,AL,5
+2026-09-03,country,MX,24
+2026-09-03,country,ES,23
+2026-09-03,country,IR,6
+2026-09-03,country,CA,62
+2026-09-03,country,VE,15
 2026-09-03,country,NG,23
 2026-09-03,country,AZ,6
 2026-09-03,country,VN,20
 2026-09-03,country,PH,9
-2026-09-03,country,PE,20
+2026-09-03,country,NI,5
 2026-09-03,country,AU,4
 2026-09-03,country,AR,16
 2026-09-03,country,PA,4
-2026-09-03,country,CA,62
-2026-09-03,country,VE,15
-2026-09-03,country,ES,23
-2026-09-03,country,MX,24
-2026-09-03,country,AL,5
-2026-09-03,country,CL,9
-2026-09-03,country,IR,6
-2026-09-03,country,ZA,5
-2026-09-03,country,KR,5
-2026-09-03,country,IN,156
-2026-09-03,country,AE,6
-2026-09-03,country,EG,6
-2026-09-03,country,CR,4
-2026-09-03,city,"Bangalore, Karnataka",27
-2026-09-03,city,"Union Park, Florida",35
-2026-09-03,city,"New York, New York",85
-2026-09-03,city,"Seattle, Washington",58
-2026-09-03,city,"Fort Lauderdale, Florida",37
-2026-09-03,city,"Coral Springs, Florida",35
-2026-09-03,city,"Ives Estates, Florida",29
-2026-09-03,city,"Princeton, Florida",46
-2026-09-03,city,"Olympia Heights, Florida",25
-2026-09-03,city,"Hialeah, Florida",130
-2026-09-03,city,"Kendall, Florida",81
-2026-09-03,city,"Gainesville, Florida",54
-2026-09-03,city,"Davie, Florida",71
-2026-09-03,gender,U,1618
-2026-09-03,gender,M,2745
-2026-09-03,gender,F,1646
-2026-09-03,age,65+,63
-2026-09-03,age,55-64,143
-2026-09-03,age,45-54,305
-2026-09-03,age,35-44,687
-2026-09-03,age,25-34,2831
-2026-09-03,age,18-24,1971
-2026-09-03,age,13-17,9
-2026-09-03,country,PL,4
-2026-09-03,city,"Kendale Lakes, Florida",77
-2026-09-03,city,"Miami Lakes, Florida",48
-2026-09-03,city,"Miramar, Florida",137
-2026-09-03,city,"Temple Terrace, Florida",31
-2026-09-03,city,"San Francisco, California",35
-2026-09-03,city,"The Hammocks, Florida",98
-2026-09-03,city,"Weston, Florida",49
-2026-09-03,city,"The Crossings, Florida",35
-2026-09-03,city,"Westchester, Florida",56
-2026-09-03,city,"Plantation, Florida",41
-2026-09-03,city,"Tampa, Florida",32
-2026-09-03,city,"Orlando, Florida",26
-2026-09-03,city,"Hollywood, Florida",61
-2026-09-03,city,"South Miami Heights, Florida",24
-2026-09-03,city,"Charlotte, North Carolina",28
-2026-09-03,city,"Richmond West, Florida",46
-2026-09-03,city,"Sweetwater, Florida",428
-2026-09-03,city,"Tamiami, Florida",106
-2026-09-03,city,"Doral, Florida",161
-2026-09-03,city,"West Kendall, Florida",77
-2026-09-03,city,"Country Club, Florida",57
-2026-09-03,city,"North Miami, Florida",41
-2026-09-03,city,"Austin, Texas",22
-2026-09-03,city,"Homestead, Florida",50
-2026-09-03,city,"Pembroke Pines, Florida",125
-2026-09-03,city,"North Miami Beach, Florida",33
-2026-09-03,city,"Coral Gables, Florida",30
-2026-09-03,country,TR,6
+2026-09-03,country,PE,20
+2026-09-05,country,FR,6
+2026-09-05,country,CA,61
+2026-09-05,country,EC,7
+2026-09-05,country,GB,19
+2026-09-05,country,ID,12
+2026-09-05,country,KE,14
+2026-09-05,country,DZ,5
+2026-09-05,country,MA,10
+2026-09-05,country,BR,26
+2026-09-05,country,DO,11
+2026-09-05,city,"Cutler Bay, Florida",33
+2026-09-05,country,JM,5
+2026-09-05,country,HK,4
+2026-09-05,country,RU,4
+2026-09-05,country,PR,12
+2026-09-05,country,BD,10
+2026-09-05,country,DE,10
+2026-09-05,country,TT,7
+2026-09-05,city,"Miami Beach, Florida",34
+2026-09-05,city,"Sunrise, Florida",30
+2026-09-05,city,"Miami, Florida",319
+2026-09-05,country,TW,6
+2026-09-05,country,US,5273
+2026-09-05,country,PK,20
+2026-09-05,country,KN,4
+2026-09-05,city,"Miami Gardens, Florida",43
+2026-09-05,country,NI,6
+2026-09-05,country,NG,23
+2026-09-05,country,AZ,6
+2026-09-05,country,VN,19
+2026-09-05,country,PH,9
+2026-09-05,country,PE,22
+2026-09-05,country,AU,4
+2026-09-05,country,AR,17
+2026-09-05,country,PA,4
+2026-09-05,country,GH,4
+2026-09-05,country,VE,14
+2026-09-05,country,ES,25
+2026-09-05,country,CO,23
+2026-09-05,country,MX,24
+2026-09-05,country,AL,5
+2026-09-05,country,CL,10
+2026-09-05,country,IR,6
+2026-09-05,country,ZA,6
+2026-09-05,country,KR,5
+2026-09-05,country,IN,155
+2026-09-05,country,AE,6
+2026-09-05,country,CR,4
+2026-09-05,city,"Bangalore, Karnataka",29
+2026-09-05,city,"Temple Terrace, Florida",33
+2026-09-05,city,"New York, New York",84
+2026-09-05,city,"Coral Springs, Florida",36
+2026-09-05,city,"Fort Lauderdale, Florida",34
+2026-09-05,city,"Ives Estates, Florida",30
+2026-09-05,city,"Princeton, Florida",46
+2026-09-05,city,"Olympia Heights, Florida",27
+2026-09-05,city,"Hialeah, Florida",129
+2026-09-05,city,"Kendall, Florida",80
+2026-09-05,city,"Coral Terrace, Florida",23
+2026-09-05,city,"Gainesville, Florida",65
+2026-09-05,city,"Davie, Florida",72
+2026-09-05,gender,U,1629
+2026-09-05,gender,M,2763
+2026-09-05,gender,F,1645
+2026-09-05,age,65+,63
+2026-09-05,age,55-64,143
+2026-09-05,age,45-54,312
+2026-09-05,age,35-44,686
+2026-09-05,age,25-34,2843
+2026-09-05,age,18-24,1980
+2026-09-05,age,13-17,10
+2026-09-05,country,PL,4
+2026-09-05,city,"Seattle, Washington",56
+2026-09-05,city,"Kendale Lakes, Florida",77
+2026-09-05,city,"Miami Lakes, Florida",49
+2026-09-05,city,"Miramar, Florida",141
+2026-09-05,city,"San Francisco, California",33
+2026-09-05,city,"The Hammocks, Florida",97
+2026-09-05,city,"Weston, Florida",45
+2026-09-05,city,"The Crossings, Florida",35
+2026-09-05,city,"Westchester, Florida",51
+2026-09-05,city,"Plantation, Florida",41
+2026-09-05,city,"Tampa, Florida",34
+2026-09-05,city,"Orlando, Florida",23
+2026-09-05,city,"Hollywood, Florida",63
+2026-09-05,city,"South Miami Heights, Florida",26
+2026-09-05,city,"Charlotte, North Carolina",28
+2026-09-05,city,"Richmond West, Florida",49
+2026-09-05,city,"Sweetwater, Florida",481
+2026-09-05,city,"Tamiami, Florida",105
+2026-09-05,city,"Doral, Florida",157
+2026-09-05,city,"West Kendall, Florida",81
+2026-09-05,city,"Country Club, Florida",58
+2026-09-05,city,"North Miami, Florida",42
+2026-09-05,city,"Homestead, Florida",49
+2026-09-05,city,"Pembroke Pines, Florida",129
+2026-09-05,city,"Union Park, Florida",43
+2026-09-05,city,"North Miami Beach, Florida",35
+2026-09-05,city,"Coral Gables, Florida",26
+2026-09-05,country,TR,6

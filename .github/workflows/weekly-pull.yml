@@ -1,4 +1,4 @@
-name: Weekly Instagram pull
+name: Weekly token refresh
 
 on:
   schedule:
@@ -32,55 +32,3 @@ jobs:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
           GH_PAT: ${{ secrets.GH_PAT }}
         run: python refresh_token.py
-
-      - name: Pull Instagram data
-        env:
-          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
-          IG_MEDIA_SINCE: "2025-01-01"
-          IG_MEDIA_LIMIT: "1500"
-          GRAPH_API_VERSION: v23.0
-        run: python instagram_pull.py
-
-      - name: Build Instagram-export-format table
-        run: python export_format.py
-
-      - name: Push to Google Sheet
-        env:
-          GSHEET_ID: ${{ secrets.GSHEET_ID }}
-          GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
-        run: python push_to_sheets.py
-
-      - name: Write freshness status
-        env:
-          GSHEET_ID: ${{ secrets.GSHEET_ID }}
-          GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
-        run: python write_status.py
-
-      - name: Sync competitor follower counts from the Sheet
-        env:
-          GSHEET_ID: ${{ secrets.GSHEET_ID }}
-          GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
-          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
-          GRAPH_API_VERSION: v23.0
-        run: python pull_competitors.py
-
-      - name: Build the dashboard page
-        run: python render.py
-
-      # account_insights.csv is append-only (one row per day) and stories.csv
-      # accumulates — a fresh checkout would otherwise reset that history every
-      # run, so commit the updated CSVs back to the repo.
-      - name: Commit updated data back to the repo
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add csv/ site/
-          if git diff --staged --quiet; then
-            echo "no data changes to commit"
-          else
-            git commit -m "Weekly Instagram pull: $(date -u +%Y-%m-%d)"
-            git push
-          fi
-
-      # If anything above fails, the run shows red in the Actions tab and GitHub
-      # emails you — so a silent stall like the local launchd one can't recur.

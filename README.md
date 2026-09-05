@@ -15,11 +15,19 @@ Two scheduled workflows. Neither needs anything from you.
 
 | Workflow | When | What it does |
 |---|---|---|
-| `daily-stories.yml` | 12:00 UTC daily | Stories + account insights, then rebuilds the page |
-| `weekly-pull.yml` | 13:00 UTC Mondays | Refreshes the token, pulls all posts, rebuilds everything |
+| `daily-stories.yml` | 12:00 UTC daily | Pulls everything, then rebuilds and deploys the page |
+| `weekly-pull.yml` | 13:00 UTC Mondays | Refreshes the access token |
 
-Stories need the daily run: the API only returns stories that are still live, so
-a weekly job would miss six days in seven.
+Everything runs daily. Stories have to, because the API only returns ones that
+are still live. Posts used to be weekly, which meant a Wednesday post stayed
+invisible until the following Monday while followers and stories updated every
+day — the page mixed fresh and stale numbers with nothing saying so. A full pull
+is ~700 API calls and about five minutes, so roughly 150 of the 2,000 free
+Actions minutes a month.
+
+Analysis windows are anchored to **today**, not to the newest post. Anchored to
+the newest post, "the last 7 days" quietly meant the seven days before whenever
+you last published.
 
 Each run commits the updated CSVs and `site/index.html` back to the repo, and
 Cloudflare redeploys from that commit within about a minute.

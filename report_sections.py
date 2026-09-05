@@ -31,17 +31,23 @@ def pct_change(before, after):
 def window(m, days, offset=0):
     """Posts published in the `days`-long window ending `offset` days ago.
 
-    `days=None` means "this calendar year to date" (and with an offset, the same
-    span of the previous year) so the Year view is genuinely about this year,
-    not a rolling 365 days straddling two.
+    Anchored to today, not to the newest post. Anchoring to the newest post
+    made "the last 7 days" mean the seven days before whenever you last
+    published, so on a quiet Saturday it silently described a week that had
+    ended on Wednesday. A window that has no posts in it should say so rather
+    than quietly sliding backwards until it finds some.
+
+    `days=None` means "this calendar year to date" (and with an offset, the
+    same span of the previous year) so the Year view is genuinely about this
+    year, not a rolling 365 days straddling two.
     """
+    today = pd.Timestamp(dt.date.today())
     if days is None:
-        today = m["d"].max()
         year = today.year - (1 if offset else 0)
         start = pd.Timestamp(year=year, month=1, day=1)
         end = today.replace(year=year) if offset else today
         return m[(m["d"] >= start) & (m["d"] <= end)]
-    end = m["d"].max() - pd.Timedelta(days=offset)
+    end = today - pd.Timedelta(days=offset)
     start = end - pd.Timedelta(days=days)
     return m[(m["d"] > start) & (m["d"] <= end)]
 
