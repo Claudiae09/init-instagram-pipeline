@@ -21,6 +21,10 @@ import pandas as pd
 from push_to_sheets import load_credentials
 
 TAB = "Competitors"
+# Monthly, not weekly. Nobody has to fetch these for us, so a person types
+# them; asking every week is four times the chore for a number that moves
+# slowly. Lower this if the cadence should tighten.
+CADENCE_DAYS = 28
 SEED_HANDLES = ["init.fiu", "knighthacks", "ufswamphacks",
                 "codecrunchworldwide", "hackabull", "fiu_cec", "alpfafiu"]
 CSV = os.path.join(os.path.dirname(os.path.abspath(__file__)), "csv",
@@ -71,7 +75,7 @@ def main():
                          dt.date.fromisoformat(r[0].strip()[:10]))
         except Exception:
             continue
-    if created or newest is None or (today - newest).days >= 7:
+    if created or newest is None or (today - newest).days >= CADENCE_DAYS:
         line = [today.isoformat()] + [""] * (len(header) - 1
                                              )
         ours = _our_followers()
@@ -81,7 +85,8 @@ def main():
         rows.append(line)
         print(f"  added a row for {today} (our count pre-filled)")
     else:
-        print(f"  newest row is {newest}; no new row needed yet")
+        due = CADENCE_DAYS - (today - newest).days
+        print(f"  newest row is {newest}; next one due in {due} days")
 
     df = pd.DataFrame(rows, columns=header)
     os.makedirs(os.path.dirname(CSV), exist_ok=True)

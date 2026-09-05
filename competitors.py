@@ -90,9 +90,11 @@ def competitor_findings(csv_dir, ours_now=None):
             if r.get("change") is not None and us.get("change") is not None:
                 r["growth_gap"] = r["change"] - us["change"]
 
+    age = (pd.Timestamp.today().normalize() - latest["date"]).days
     return {"enough": True, "rows": rows, "us": us, "as_of": latest["date"],
             "weeks": len(d), "handles": handles, "missing": missing,
-            "have_numbers": len(known) > 1}
+            "have_numbers": len(known) > 1, "age_days": int(age),
+            "stale": age > 45}
 
 
 def competitor_note(cf):
@@ -130,6 +132,9 @@ def competitor_note(cf):
             out.append(f"<b>@{top['handle']} grew fastest</b>, "
                        f"{top['change']:+,.0f} against your "
                        f"{us['change']:+,.0f}.")
+    if cf.get("stale"):
+        out.append(f"<i>These numbers are {cf['age_days']} days old. A fresh row "
+                   f"is added to the sheet every month for someone to fill.</i>")
     if cf.get("missing"):
         out.append("<i>Still blank: "
                    + ", ".join(f"@{h}" for h in cf["missing"]) + ".</i>")

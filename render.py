@@ -124,7 +124,7 @@ def competitor_section(m):
              + (f', across {cf["weeks"]} readings.' if cf["weeks"] > 1 else '.'))
     return ('<section class="block panel"><h2>How you compare</h2>'
             f'<p class="sub2">The accounts competing for the same students. '
-            f'{stamp}</p>'
+            f'{stamp} Updated monthly.</p>'
             '<div class="tw"><table class="topics"><thead><tr>'
             '<th>Account</th><th class="n">Followers</th>'
             '<th class="n">Change</th><th class="n">vs you</th>'
