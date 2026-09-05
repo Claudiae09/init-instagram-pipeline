@@ -1,0 +1,12 @@
+{
+  // Serves the generated dashboard in ./site as a static site on Cloudflare.
+  // No Worker code needed — the "assets" binding alone makes Cloudflare host
+  // the folder. The weekly GitHub Actions run rewrites site/index.html and
+  // commits it, which triggers a redeploy automatically.
+  "name": "init-instagram",
+  "compatibility_date": "2025-09-01",
+  "assets": {
+    "directory": "./site",
+    "not_found_handling": "single-page-application"
+  }
+}
