@@ -82,8 +82,8 @@ def compare_periods(m, days, label, prior_label):
 def period_recommendations(p):
     """Turn a comparison dict into plain-language recommendations."""
     if not p["enough"]:
-        return [f"Only {p['posts']} post{'s' if p['posts'] != 1 else ''} in this window — "
-                f"not enough to draw a conclusion yet. Try the longer view."]
+        return [f"Only {p['posts']} post{'s' if p['posts'] != 1 else ''} in this window, "
+                f"which is not enough to draw a conclusion yet. Try the longer view."]
     out = []
     # 1. sharing direction
     if p["prev_enough"] and abs(p["share_change"]) >= 10:
@@ -94,13 +94,15 @@ def period_recommendations(p):
             f"{p['share_1k']:.1f} shares per 1,000 reached, against "
             f"{p['prev_share_1k']:.1f} before. "
             + ("Whatever changed, keep doing it." if up else
-               "This is the metric that grows you — worth diagnosing before it settles in."))
+               "This is the number that grows you, so it is worth looking into "
+               "before it settles in."))
     # 2. format leader in this window
     if p["formats"]:
         top = p["formats"][0]
         out.append(
             f"<b>{top[0]}s led this {p['label'].lower()}</b> at {top[1]:.1f} shares per "
-            f"1,000 reached across {top[2]} post{'s' if top[2] != 1 else ''}."
+            f"1,000 reached, across {top[2]} post{'s' if top[2] != 1 else ''}. "
+            f"That is the format to make more of."
             + (f" {p['formats'][-1][0]}s trailed at {p['formats'][-1][1]:.1f}."
                if len(p["formats"]) > 1 else ""))
     # 3. reach
@@ -113,9 +115,10 @@ def period_recommendations(p):
     # 4. volume vs quality
     if p["prev_enough"] and p["posts"] > p["prev_posts"] and p["er"] < p["prev_er"]:
         out.append(
-            f"<b>You posted more but engaged less.</b> {p['posts']} posts vs "
+            f"<b>You posted more but engaged less.</b> {p['posts']} posts against "
             f"{p['prev_posts']}, yet engagement fell from {p['prev_er']:.1f}% to "
-            f"{p['er']:.1f}%. Volume isn't the lever here.")
+            f"{p['er']:.1f}%. Posting more is not the lever here. Fewer, stronger "
+            f"posts will do better than filling the calendar.")
     if not out:
         out.append(f"<b>Steady {p['label'].lower()}.</b> {p['posts']} posts, "
                    f"{p['share_1k']:.1f} shares per 1,000 reached, median reach "
@@ -223,7 +226,7 @@ def caption_findings(m, fmt=None):
 def caption_recommendations(cf):
     """Plain-language caption guidance from the findings."""
     if not cf.get("enough"):
-        return [f"Only {cf.get('posts', 0)} posts with captions here — not enough to "
+        return [f"Only {cf.get('posts', 0)} posts with captions here, not enough to "
                 f"read caption patterns yet."]
     out = []
     b = cf["buckets"]
@@ -234,7 +237,8 @@ def caption_recommendations(cf):
                 f"<b>Write longer captions.</b> Posts with <b>{best['name']} characters</b> "
                 f"get {best['share_1k']:.1f} shares per 1,000 reached, against "
                 f"{worst['share_1k']:.1f} for {worst['name']}. "
-                f"Give the context — it gets shared more than a one-liner.")
+                f"Give people the context. It gets shared more than a one-liner "
+                f"does, so write the fuller version.")
     for t in cf["traits"][:3]:
         if abs(t["lift"]) < 15:
             continue
@@ -347,24 +351,26 @@ def story_findings(csv_dir, days=None):
 def story_recommendations(sf):
     if not sf.get("enough"):
         return [f"Only {sf.get('n', 0)} stories captured in this window. The daily job "
-                f"collects them from now on — check back in a few weeks."]
+                f"collects them from now on, so check back in a few weeks."]
     out = [f"<b>{sf['completion']:.0f}% of viewers watch through</b> rather than tapping "
            f"away, on a median reach of {sf['reach_med']:,.0f}. Above roughly 70% is healthy."]
 
     bt = sf["by_type"]
     if len(bt) >= 2 and (bt[0]["completion"] - bt[-1]["completion"]) >= 5:
         out.append(
-            f"<b>{bt[0]['type']} stories hold attention better</b> — "
-            f"{bt[0]['completion']:.0f}% completion against {bt[-1]['completion']:.0f}% for "
-            f"{bt[-1]['type'].lower()}. Lead with {bt[0]['type'].lower()}s when it matters.")
+            f"<b>{bt[0]['type']} stories hold attention better.</b> "
+            f"{bt[0]['completion']:.0f}% of people watch them through, against "
+            f"{bt[-1]['completion']:.0f}% for {bt[-1]['type'].lower()}. Lead with "
+            f"{bt[0]['type'].lower()}s when the story actually matters.")
 
     # what kind of engagement is actually happening
     if sf.get("interactions"):
         out.append(
             f"<b>Engagement is passive.</b> Of {sf['interactions']:.0f} interactions, "
             f"about {sf['passive']:.0f} are likes or sticker taps, {sf['shares']:.0f} are "
-            f"shares and {sf['replies']:.0f} are replies. People react but don't respond — "
-            f"a poll or question sticker is what turns a tap into a conversation.")
+            f"shares and {sf['replies']:.0f} are replies. People react but they do "
+            f"not write back. A poll or question sticker is what turns a tap into "
+            f"an actual conversation, so it is worth adding one to your regulars.")
 
     # conversion: does any of this reach go anywhere?
     if sf.get("total_reach"):
@@ -372,15 +378,17 @@ def story_recommendations(sf):
             f"<b>Stories aren't converting.</b> {sf['total_reach']:,.0f} people reached "
             f"produced {sf['profile_visits']:.0f} profile visits and "
             f"{sf['follows']:.0f} follows. If stories are meant to grow you, they need an "
-            f"explicit next step — a link sticker, or 'tap the profile to sign up'.")
+            f"explicit next step, like a link sticker or a line saying 'tap the "
+            f"profile to sign up'.")
 
     out.append("<i>Instagram's API doesn't expose poll votes, quiz answers or question "
-               "replies — those live only in the app. The likes/sticker figure above is "
-               "derived from total interactions.</i>")
+               "replies. Those live only in the Instagram app. The likes and "
+               "stickers figure above is worked out from total interactions.</i>")
     if sf.get("truncated"):
         pass                      # covered by the banner at the top of the pane
     elif sf["thin"]:
-        out.append(f"<i>Early read — {sf['n']} stories. Firms up as the daily job runs.</i>")
+        out.append(f"<i>Early read, based on {sf['n']} stories. It firms up as the "
+                   f"daily job keeps running.</i>")
     return out
 
 
@@ -452,14 +460,14 @@ def diagnosis_text(dg):
                    "; ".join(f["text"] for f in helped) + ".")
     if dg["spread"]:
         out.append(
-            f"<b>It wasn't how much you posted — it was which posts.</b> "
+            f"<b>It was not how much you posted, it was which posts.</b> "
             f"{dg['strong_n']} post{'s' if dg['strong_n'] != 1 else ''} did well while "
             f"{dg['weak_n']} landed under half the average. The gap between your best and "
             f"worst post this period is far bigger than the gap between periods.")
     if not hurt and dg.get("spread"):
         out.append(
             "<b>Format, timing and caption length don't separate the winners from the "
-            "losers here</b> — so the difference is the content itself: the subject, the "
+            "losers here</b>, so the difference is the content itself: the subject, the "
             "hook, the visual. Open the weak posts below and compare them to your best "
             "performer for that format.")
     return out
@@ -489,7 +497,7 @@ def explain_post(m, post):
     bits, fix = [], []
     if seen_badly:
         bits.append(f"it reached {post['reach']:,.0f} people against a typical "
-                    f"{peer_reach:,.0f} for {fmt.replace('IG ','')}s — it did not get "
+                    f"{peer_reach:,.0f} for {fmt.replace('IG ','')}s, so it did not get "
                     f"distributed")
         best = best_time_for(m, fmt)
         if best and hour is not None and abs(int(hour) - (best["hour"] or int(hour))) >= 2:
@@ -500,24 +508,24 @@ def explain_post(m, post):
                        f"{'am' if best['hour'] < 12 else 'pm'} slot")
         else:
             fix.append("the hook or opening frame likely didn't hold people in the "
-                       "first seconds — that's what drives distribution")
+                       "first seconds, since that is what drives distribution")
     if ignored:
         bits.append(f"plenty of people saw it ({post['reach']:,.0f}) but almost nobody "
                     f"passed it on")
         if caplen < peer_cap * 0.75:
             bits.append(f"its caption is {caplen} characters against a typical "
                         f"{peer_cap:.0f}")
-            fix.append("give it the context that makes it worth forwarding — who it's "
+            fix.append("give it the context that makes it worth forwarding: who it is "
                        "for, why it matters, what happens next")
         else:
             fix.append("this reads as an announcement rather than something someone "
                        "would send to a friend. Add a reason to share: name the person "
                        "it helps, or make it feel like news worth passing on")
     if fmt == "IG image":
-        fix.append("single graphics are your weakest format for sharing — the same "
+        fix.append("single graphics are your weakest format for sharing, so the same "
                    "message as a carousel usually travels further")
     if not bits:
-        bits.append("nothing in the timing, format or caption stands out — this looks "
+        bits.append("nothing in the timing, format or caption stands out, so this looks "
                     "like the content simply didn't land")
         fix.append("compare it against your best performer for this format and look at "
                    "the difference in subject and hook")

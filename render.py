@@ -103,7 +103,7 @@ def decision_card(m):
                         + (f'<span class="fix">{esc(fix_txt)}</span>' if fix_txt else "")
                         + "</li>")
                 items = "".join(parts)
-                weak = ('<p class="line"><b>Worth a look — the weakest posts '
+                weak = ('<p class="line"><b>Worth a look: the weakest posts '
                         f'this period:</b></p><ul class="weak">{items}</ul>')
             if lines or weak:
                 why = ('<details class="why-mini"><summary>'
@@ -163,8 +163,8 @@ def format_section(m):
                         f'this history.</b> Stories are only retrievable while they '
                         f'are still live, so anything posted before daily collection '
                         f'began on {esc(sf["since"])} is gone for good and cannot be '
-                        f'recovered. There is not {what} of story data to show yet \u2014 '
-                        f'the <b>Week</b> view has everything we do hold. This view '
+                        f'recovered. There is not {what} of story data to show yet. '
+                        f'The <b>Week</b> view has everything we do hold. This view '
                         f'fills in on its own by {esc(sf["complete_on"])}.</p></div>')
                     continue
                 banner = ""
@@ -172,7 +172,7 @@ def format_section(m):
                 # Say what the window actually covers, not just what was asked
                 # for — collection began mid-year, so Month and Year overlap.
                 if sf.get("truncated"):
-                    span_s += f" \u2014 all {sf['span_days']} days we hold so far"
+                    span_s += f", which is all {sf['span_days']} days we hold so far"
                 # Spell out frames vs stories: several frames posted back to
                 # back are one story, and the raw frame count reads as if far
                 # more was posted than actually was.
@@ -201,10 +201,12 @@ def format_section(m):
                 warn = ""
                 if w["concentrated"]:
                     warn = ('<p class="note">One post accounts for most of these '
-                            'shares — read this as a single result, not a pattern.</p>')
+                            'shares, so read this as a single result rather than '
+                            'a pattern.</p>')
                 elif w["thin"]:
                     warn = (f'<p class="note">Only {w["posts"]} post'
-                            f'{"s" if w["posts"] != 1 else ""} in {span} — directional '
+                            f'{"s" if w["posts"] != 1 else ""} in {span}, so treat '
+                            f'this as directional '
                             f'at best.</p>')
                 t = w["top"]
                 body = (
@@ -215,7 +217,7 @@ def format_section(m):
                     + warn
                     + (f'<p class="line"><b>Best {label.lower()} of {span}:</b> '
                        f'<a href="{esc(t["permalink"])}" target="_blank" rel="noopener">'
-                       f'{esc(str(t["caption"])[:100])}…</a> — {t["shares"]:,.0f} shares, '
+                       f'{esc(str(t["caption"])[:100])}…</a> with {t["shares"]:,.0f} shares, '
                        f'{t["reach"]:,.0f} reached.</p>' if t else ""))
 
             # guidance that needs the full history
@@ -229,7 +231,7 @@ def format_section(m):
                      f'<p class="line"><b>Captions:</b></p><ul>'
                      + "".join(f"<li>{c}</li>" for c in caps) + "</ul>"
                      + f'<p class="allhist">Timing and caption guidance use all '
-                       f'{prof["posts"]} {label.lower()} — too few in a single '
+                       f'{prof["posts"]} {label.lower()}, too few in a single '
                        f'{"year" if days is None else "window"} to be reliable.</p>')
             panes.append(f'<div class="pane{show}" id="f-{pkey}-{j}" '
                          f'role="tabpanel">{body}</div>')
@@ -274,7 +276,7 @@ def charts_section(m):
             f'title="{esc(title)}"></iframe></div>')
     return ('<section class="block"><details class="why">'
             '<summary><span class="chev">›</span> See the data behind these '
-            'recommendations <em>— 9 charts</em></summary>'
+            'recommendations <em>(9 charts)</em></summary>'
             '<p class="sub2">These are the live Tableau views. They refresh on their '
             'own as new data arrives.</p>'
             + "".join(items) +

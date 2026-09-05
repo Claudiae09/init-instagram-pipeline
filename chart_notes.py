@@ -52,6 +52,33 @@ def _strength(r):
            "a moderate" if a < .6 else "a strong"
 
 
+def _year_caution(m, col, per):
+    """Warn when a current-year view flips the ranking on a thin sample.
+
+    Sheet1 and Sheet6 in Tableau are filtered to the current year, where a
+    format with a handful of posts can top the chart. That contradicts the
+    note sitting above it, so say why rather than leaving the reader to guess
+    which one to believe."""
+    import datetime as _dt
+    cur = m[m["d"].dt.year == _dt.date.today().year]
+    if not len(cur):
+        return ""
+    ranked = []
+    for f, g in cur.groupby("post_type"):
+        if g["reach"].sum():
+            ranked.append((f.replace("IG ", ""), g[col].sum() / g["reach"].sum() * per,
+                           len(g)))
+    ranked.sort(key=lambda x: -x[1])
+    allh, _ = _fmt_rates(m, col, per)
+    if not ranked or not allh or ranked[0][0] == allh[0][0]:
+        return ""
+    thin = ranked[0]
+    return (f" One caution: if you have the chart filtered to this year only, "
+            f"{thin[0]}s will look like the winner, but that is off just "
+            f"{thin[2]} posts. Too few to trust. The figures above use all "
+            f"{len(m)} posts.")
+
+
 def _monthly(m, complete_only=True):
     """Monthly aggregates. The current calendar month is still being written —
     it has a partial post count and a partial reach curve — so comparing it to
@@ -71,174 +98,200 @@ def _monthly(m, complete_only=True):
 # ── one function per chart ──────────────────────────────────────────────────
 def share_by_format(m):
     rates, skipped = _fmt_rates(m, "shares")
-    what = ("Shares per 1,000 people reached, by format. Shares are what put you "
-            "in front of people who don't already follow you, so this is the "
-            "growth metric.")
+    what = ("How often people share your posts, per 1,000 who saw them, broken out "
+            "by format. Sharing is how you reach people who don't follow you yet, "
+            "so this is the number that grows the account.")
     if not rates:
-        return what, "Not enough posts in any one format yet to rank them."
-    top = rates[0]
-    says = (f"<b>Working:</b> {top[0].capitalize()}s lead at {top[1]:.1f} per 1,000 across "
-            f"{top[2]} posts.")
-    if len(rates) > 1:
+        return what, "No format has enough posts yet to rank them fairly."
+    top, says = rates[0], ""
+    says = (f"<b>Working:</b> {top[0].capitalize()}s. They get shared {top[1]:.1f} times per "
+            f"1,000 people reached, across {top[2]} posts. That is the format to "
+            f"keep making.")
+    if len(rates) > 1 and rates[-1][1]:
         low = rates[-1]
-        says += (f" <b>Not working:</b> {low[0].capitalize()}s at {low[1]:.1f} — "
-                 f"{top[1] / low[1]:.1f}× behind." if low[1] else
-                 f" <b>Not working:</b> {low[0].capitalize()}s draw almost no shares.")
+        says += (f" <b>Not working:</b> {low[0].capitalize()}s, at {low[1]:.1f}. They get shared "
+                 f"about {top[1] / low[1]:.1f} times less often. Worth using them "
+                 f"for reminders and announcements rather than for growth.")
     if skipped:
-        says += (" Excluded: " +
-                 ", ".join(f"{f.replace('IG ', '')}s ({why})" for f, why in skipped) + ".")
+        says += (" Left out of the ranking: " +
+                 ", ".join(f"{f.replace('IG ', '')}s, {why}" for f, why in skipped) + ".")
+    says += _year_caution(m, "shares", 1000)
     return what, says
 
 
 def reach_trend(m):
     t = _monthly(m)
-    what = ("Median reach per post, by month. Median rather than average, so one "
-            "viral post can't make a flat month look healthy.")
+    what = ("The typical reach of a post each month. We use the middle value rather "
+            "than the average so that one post going viral doesn't hide a quiet "
+            "month.")
     if len(t) < 4:
-        return what, "Needs a few more months before a trend means anything."
+        return what, "We need a few more months before a trend here means much."
     last, prior = t["reach"].iloc[-1], t["reach"].iloc[-4:-1].mean()
-    ch = R.pct_change(prior, last)
-    d = "up" if ch > 0 else "down"
-    lbl = "<b>Working:</b>" if ch > 0 else "<b>Not working:</b>"
-    name = t.index[-1].strftime("%B")
-    return what, (f"{lbl} {name}, the last complete month, sits at {last:,.0f} "
-                  f"median reach — {d} {abs(ch):.0f}% on the three months before "
-                  f"it ({prior:,.0f}). The current month is still in progress and "
-                  f"is left out of this comparison.")
+    ch, name = R.pct_change(prior, last), t.index[-1].strftime("%B")
+    tail = (" The current month is still being posted, so it is left out of this "
+            "comparison.")
+    if ch > 0:
+        return what, (f"<b>Working:</b> {name} was your last complete month and a "
+                      f"typical post reached {last:,.0f} people, up {ch:.0f}% on the "
+                      f"three months before it ({prior:,.0f}). Whatever changed in "
+                      f"{name}, keep doing it.{tail}")
+    return what, (f"<b>Not working:</b> {name} was your last complete month and a "
+                  f"typical post reached {last:,.0f} people, down {abs(ch):.0f}% on "
+                  f"the three months before it ({prior:,.0f}). Reach usually slides "
+                  f"when posts get more similar to each other, so it is worth "
+                  f"looking at what you were making earlier in the year.{tail}")
 
 
 def volume_vs_engagement(m):
     t = _monthly(m)
-    what = ("How many posts you published each month, against the engagement rate "
-            "those posts earned. It answers whether posting more actually helps.")
+    what = ("How much you posted each month set against how well those posts did. "
+            "It answers a question worth settling: does posting more actually help?")
     r = _corr(t["posts"], t["er"])
     if r is None:
-        return what, "Not enough months yet to say."
+        return what, "Not enough months of history yet to answer that."
     if r < -.15:
-        return what, ("<b>Not working:</b> months with more posts tend to have "
-                      f"<i>lower</i> engagement ({_strength(r)} negative "
-                      f"relationship). Volume is not the lever — quality per post is.")
+        return what, ("<b>Not working:</b> your busier months tend to get "
+                      "<i>less</i> engagement, not more. Posting more often is not "
+                      "the lever here. You will get further making fewer, stronger "
+                      "posts than filling a calendar.")
     if r > .15:
-        return what, (f"<b>Working:</b> busier months engage better "
-                      f"({_strength(r)} positive relationship). Consistency is "
-                      f"paying off.")
-    return what, ("Posting volume and engagement move independently — there is no "
-                  "real relationship. Publishing more won't hurt, but it won't "
-                  "lift engagement on its own either.")
+        return what, ("<b>Working:</b> the months you post more are also the months "
+                      "you engage better. Staying consistent is paying off, so keep "
+                      "the current rhythm going.")
+    return what, ("Posting more and engaging better are not connected in your data "
+                  "either way. Publishing more often will not hurt you, but it will "
+                  "not lift engagement on its own. What you post matters more than "
+                  "how often.")
 
 
 def best_time(m):
-    what = ("Median reach by the day and hour a post went out. Use it to schedule, "
-            "not to explain why one post did well.")
+    what = ("The typical reach of a post depending on which day and hour it went "
+            "out. Good for planning your schedule, not for explaining why one "
+            "particular post did well.")
     d = m.groupby("publish_weekday").agg(n=("reach", "size"), med=("reach", "median"))
     d = d[d["n"] >= R.MIN_POSTS].sort_values("med", ascending=False)
     if len(d) < 2:
-        return what, "Not enough posts per day yet to rank them."
-    bd, br = d.index[0], d.iloc[0]
-    wd, wr = d.index[-1], d.iloc[-1]
-    return what, (f"<b>Working:</b> {bd} reaches furthest — {br['med']:,.0f} median "
-                  f"across {int(br['n'])} posts. <b>Not working:</b> {wd} at "
-                  f"{wr['med']:,.0f} across {int(wr['n'])}. Moving a {wd} post to "
-                  f"{bd} is the cheapest change on this page.")
+        return what, "Not enough posts on each day yet to rank them."
+    bd, br, wd, wr = d.index[0], d.iloc[0], d.index[-1], d.iloc[-1]
+    return what, (f"<b>Working:</b> {bd}. A typical {bd} post reaches "
+                  f"{br['med']:,.0f} people across {int(br['n'])} posts. "
+                  f"<b>Not working:</b> {wd}, at {wr['med']:,.0f} across "
+                  f"{int(wr['n'])}. Shifting your {wd} posts to {bd} is the easiest "
+                  f"win on this page, since it costs nothing to change.")
 
 
 def saves_vs_shares(m):
     sh, _ = _fmt_rates(m, "shares")
     sv, _ = _fmt_rates(m, "saved")
-    what = ("Saves against shares, by format. They mean different things: a save "
-            "is “useful to me later”, a share is “worth passing on”.")
+    what = ("Saves set against shares, by format. The two mean different things. A "
+            "save means someone wants to come back to it later. A share means they "
+            "thought it was worth passing on to someone else.")
     if not sh or not sv:
-        return what, "Not enough posts in any one format yet."
-    says = (f"Most shared: <b>{sh[0][0].capitalize()}s</b> ({sh[0][1]:.1f} per 1,000). "
-            f"Most saved: <b>{sv[0][0].capitalize()}s</b> ({sv[0][1]:.1f} per 1,000).")
+        return what, "No format has enough posts yet."
+    says = (f"Most shared: <b>{sh[0][0].capitalize()}s</b>, at {sh[0][1]:.1f} per 1,000 reached. "
+            f"Most saved: <b>{sv[0][0].capitalize()}s</b>, at {sv[0][1]:.1f}.")
     if sh[0][0] == sv[0][0]:
-        says += (f" The same format wins both, which is unusual and worth leaning "
-                 f"into — {sh[0][0]}s are doing double duty.")
+        says += (f" The same format wins both, which does not happen often. "
+                 f"{sh[0][0].capitalize()}s are doing double duty for you, so make "
+                 f"more of them.")
     else:
-        says += (f" They differ: {sv[0][0]}s get kept for later, {sh[0][0]}s get "
-                 f"passed around. Reach needs {sh[0][0].lower()}s; recruitment "
-                 f"material can be {sv[0][0].lower()}s.")
+        says += (f" They split. {sv[0][0].capitalize()}s get kept for later, so use "
+                 f"them for things people need to act on, like deadlines and how-to "
+                 f"posts. {sh[0][0].capitalize()}s get passed around, so use those "
+                 f"when the goal is reaching new people.")
     return what, says
 
 
 def most_shared(m):
-    what = "Your most-shared posts, ranked. The template worth copying."
+    what = ("Your most shared posts, ranked. This is the list to actually study, "
+            "because these are the posts that brought new people in.")
     g = m.dropna(subset=["shares"]).sort_values("shares", ascending=False)
     if len(g) < 5:
         return what, "Not enough posts yet."
     top5 = g.head(5)
     part = top5["shares"].sum() / g["shares"].sum() * 100
     kinds = top5["post_type"].str.replace("IG ", "").value_counts()
-    lead = f"{kinds.iloc[0]} of the top 5 are {kinds.index[0]}s"
-    says = (f"The top 5 posts account for <b>{part:.0f}% of all shares</b> ever. "
-            f"{lead}.")
+    says = (f"Your top 5 posts account for <b>{part:.0f}% of every share you have "
+            f"ever had</b>, and {kinds.iloc[0]} of those 5 are {kinds.index[0]}s.")
     if part > 50:
-        says += (" That concentration means the average post does very little — "
-                 "the wins are rare, so study these five rather than the average.")
+        says += (" That is very concentrated. It means the typical post does almost "
+                 "nothing and a handful carry everything, so copy what these five "
+                 "did rather than looking at your averages.")
+    else:
+        says += (f" Open the top few and look for what they have in common. That is "
+                 f"your template, and {kinds.index[0]}s are the format to build it "
+                 f"in.")
     return what, says
 
 
 def reel_watch(m):
-    what = ("Average seconds watched per reel. Watch time is what the algorithm "
-            "rewards, more than likes.")
+    what = ("How many seconds people actually watch your reels for. Instagram pushes "
+            "reels that hold attention much harder than it pushes reels that get "
+            "likes.")
     g = m[(m["post_type"] == "IG reel") & m["avg_watch_time_sec"].notna()]
     g = g[g["avg_watch_time_sec"] > 0]
     if len(g) < 5:
-        return what, "Not enough reels with watch-time data yet."
+        return what, "Not enough reels with watch time data yet."
     med = g["avg_watch_time_sec"].median()
     r = _corr(g["avg_watch_time_sec"], g["reach"])
-    says = f"Median watch time is <b>{med:.1f}s</b> across {len(g)} reels."
+    says = (f"People watch a typical reel for <b>{med:.1f} seconds</b>, across "
+            f"{len(g)} reels.")
     if r is not None and r > .15:
-        says += (f" <b>Working:</b> reels held longer also reach further "
-                 f"({_strength(r)} positive relationship) — holding attention "
-                 f"is what buys distribution.")
+        says += (" <b>Working:</b> the reels people stay with also travel further. "
+                 "Holding attention is what buys you reach, so keep making the kind "
+                 "that people watch to the end, and keep them short enough that they "
+                 "do.")
     elif r is not None and r < -.15:
-        says += (" Longer watch times are not translating into reach here, which "
-                 "usually means the opening second is losing people before the "
-                 "average is measured.")
+        says += (" Longer watch times are not turning into reach, which usually "
+                 "means people are dropping off in the first second or two. The "
+                 "opening frame is where to focus.")
     else:
-        says += (" Watch time and reach move independently so far — length is "
-                 "not the thing holding reels back.")
+        says += (" Watch time and reach are not moving together yet, so length is "
+                 "not what is holding your reels back. The subject matters more.")
     return what, says
 
 
 def reach_vs_share_rate(m):
-    what = ("One dot per post: how far it reached, against how often it was shared. "
-            "It separates posts that were merely pushed from posts people chose to "
-            "pass on.")
+    what = ("Every dot is one post. How far it travelled runs across, how often "
+            "people shared it runs up. It separates posts Instagram simply pushed "
+            "from posts people actually chose to pass on.")
     g = m[(m["reach"] > 0) & m["shares"].notna()].copy()
     g["rate"] = g["shares"] / g["reach"] * 1000
     r = _corr(g["reach"], g["rate"])
     if r is None:
         return what, "Not enough posts yet."
     if r > .15:
-        return what, (f"<b>Working:</b> your widest-reaching posts are also the most "
-                      f"shared ({_strength(r)} positive relationship) — reach here "
-                      f"is earned, not just served.")
+        return what, ("<b>Working:</b> your furthest reaching posts are also the "
+                      "most shared. That means your reach is earned rather than just "
+                      "handed to you, which is the healthy version of this chart. "
+                      "Look at the dots in the top right and make more like them.")
     if r < -.15:
-        return what, (f"<b>Not working:</b> the posts that reach furthest are shared "
-                      f"<i>least</i> per viewer ({_strength(r)} negative relationship). "
-                      f"Big reach is coming from distribution, not from content people "
-                      f"want to pass on.")
-    return what, ("Reach and share rate are unrelated — a post reaching more people "
-                  "doesn't mean it resonated more. Judge posts on share rate, not "
-                  "raw reach.")
+        return what, ("<b>Not working:</b> the posts that reach the most people are "
+                      "shared the least by the people who see them. Big reach is "
+                      "coming from Instagram pushing the post, not from people "
+                      "wanting to pass it on. Judge posts by the share rate going "
+                      "up the chart, not by how far right they sit.")
+    return what, ("Reach and sharing are not related in your data. A post reaching "
+                  "more people does not mean it landed better, so use share rate to "
+                  "judge what worked, not reach.")
 
 
 def er_by_format(m):
     rates, _ = _fmt_rates(m, "total_interactions", per=100)
-    what = ("Total interactions as a percentage of reach, by format. This counts "
-            "likes and comments, so it measures approval rather than growth.")
+    what = ("Likes and comments as a share of the people who saw the post, by "
+            "format. This measures whether people who already follow you approve, "
+            "which is a different question from whether a post grows you.")
     if not rates:
-        return what, "Not enough posts in any one format yet."
+        return what, "No format has enough posts yet."
     sh, _ = _fmt_rates(m, "shares")
-    says = (f"<b>{rates[0][0].capitalize()}s</b> engage best at {rates[0][1]:.1f}% across "
-            f"{rates[0][2]} posts.")
+    says = (f"<b>{rates[0][0].capitalize()}s</b> do best here, at "
+            f"{rates[0][1]:.1f}% across {rates[0][2]} posts.")
     if sh and sh[0][0] != rates[0][0]:
-        says += (f" Note this disagrees with shares, where {sh[0][0]}s lead — "
-                 f"{rates[0][0].lower()}s get approval from people who already "
-                 f"follow you, {sh[0][0].lower()}s bring in new ones. Prefer "
-                 f"{sh[0][0].lower()}s when the goal is growth.")
+        says += (f" Worth knowing that this disagrees with sharing, where "
+                 f"{sh[0][0]}s lead. {rates[0][0].capitalize()}s win approval from "
+                 f"people who already follow you. {sh[0][0].capitalize()}s bring new "
+                 f"people in. When the goal is growing, follow the sharing number.")
+    says += _year_caution(m, "total_interactions", 100)
     return what, says
 
 
@@ -256,7 +309,7 @@ BUILDERS = {
 
 
 def note_for(title, m):
-    """(what it shows, what it currently says) — or None if we have no builder."""
+    """(what it shows, what it currently says) or None if we have no builder."""
     fn = BUILDERS.get(title)
     if not fn:
         return None
