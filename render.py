@@ -18,6 +18,7 @@ from pathlib import Path
 import pandas as pd
 
 import audience as AU
+import timing as TM
 import chart_notes as CN
 import report_sections as R
 import topics as TP
@@ -81,6 +82,40 @@ def kpi_panes(m):
         out.append(f'<div class="pane{on}" id="k-{key}" role="tabpanel" '
                    f'aria-labelledby="t-{key}">{kpi_strip(m, days, label)}</div>')
     return "".join(out)
+
+
+def guidance_card(m):
+    """When to post and how often. Deliberately not period-scoped: a single
+    week cannot place a best time, and cadence is a question about weeks."""
+    pf = TM.posting_findings(m)
+    if not pf.get("enough") or "day" not in pf:
+        return ""
+    when = f'{pf["day"]}'
+    if pf.get("hour") is not None:
+        when += f', {hour_label(pf["hour"])}'      # short enough for one line
+    band = pf.get("best_band")
+    cells = [
+        ("Best day to post", when,
+         f'median reach {pf["day_reach"]:,} across {pf["day_n"]} posts'),
+    ]
+    if band:
+        cells.append(("How often", f'{band["label"]} a week',
+                      f'{band["rate"]:.1f} shares per 1,000 across '
+                      f'{band["weeks"]} weeks'))
+    if pf.get("recent_avg") is not None:
+        cells.append(("You are posting", f'{pf["recent_avg"]:.1f} a week',
+                      f'average of the last {pf["recent_weeks"]} weeks'))
+    tiles = "".join(
+        f'<div class="kpi"><span class="kl">{esc(l)}</span>'
+        f'<span class="kv kvs">{esc(v)}</span>'
+        f'<span class="kd">{esc(d)}</span></div>' for l, v, d in cells)
+    notes = "".join(f"<li>{n}</li>" for n in TM.posting_note(pf))
+    return ('<section class="block panel"><h2>When and how often to post</h2>'
+            '<p class="sub2">Weekly guidance from your full history, so this '
+            'one does not follow the period above.</p>'
+            f'<div class="kpis kpis-3">{tiles}</div>'
+            + (f'<ul class="csays">{notes}</ul>' if notes else "")
+            + "</section>")
 
 
 def period_bar():
@@ -597,6 +632,8 @@ text-transform:uppercase;letter-spacing:.02em}
 /* ── dashboard layout ───────────────────────────────────────────────────── */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
 gap:12px;margin:0 0 22px}
+.kpis-3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin:14px 0 16px}
+.kvs{font-size:var(--fs-lead)}
 .kpi{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
 padding:16px 18px;display:flex;flex-direction:column;gap:2px}
 .kl{font-size:var(--fs-micro);color:var(--muted);font-weight:600;
@@ -864,6 +901,7 @@ def build(m):
          f'latest post {newest:%b %d, %Y}</p>',
          period_bar(),
          kpi_panes(m),
+         guidance_card(m),
          '<div class="grid">',
          decision_card(m),
          audience_section("growth"),
