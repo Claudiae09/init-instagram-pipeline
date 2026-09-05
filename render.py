@@ -113,10 +113,14 @@ def kpi_strip(m, days, label):
     tiles = []
 
     if g.get("enough"):
-        up = g["change"] >= 0
-        tiles.append(("Followers", f"{g['current']:,.0f}",
-                      f"{g['change']:+,.0f} in {g['days']} days",
-                      "up" if up else "down"))
+        if g.get("reportable"):
+            up = g["change"] >= 0
+            tiles.append(("Followers", f"{g['current']:,.0f}",
+                          f"{g['change']:+,.0f} in {g['days']} days",
+                          "up" if up else "down"))
+        else:
+            tiles.append(("Followers", f"{g['current']:,.0f}",
+                          f"tracking began {g['collection_start']:%d %b}", ""))
     if len(cur):
         now, before = R.rate(cur, "shares"), R.rate(prev, "shares")
         ch = R.pct_change(before, now)
@@ -451,6 +455,16 @@ def _growth_pane(i, key, days):
     if not g.get("enough"):
         body = ('<p class="line">Not enough follower readings in this period '
                 'yet.</p>')
+    elif not g.get("reportable"):
+        # Showing the numbers here would repeat the shorter window's figures
+        # under a longer label, which reads as a bug rather than as a limit.
+        what = "a full year" if days is None else f"a full {days} days"
+        body = (f'<p class="banner"><b>Not enough history for this view yet.</b> '
+                f'Daily follower tracking began '
+                f'{g["collection_start"]:%d %b %Y}, so this holds '
+                f'{g["days"]} days rather than {what}. Showing it would just '
+                f'repeat the shorter period. Use <b>Month</b> until more '
+                f'accumulates.</p>')
     else:
         up = g["change"] >= 0
         body = (

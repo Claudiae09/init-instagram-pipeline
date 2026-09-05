@@ -89,6 +89,7 @@ def audience_recommendations(af):
 
 # ── follower growth ─────────────────────────────────────────────────────────
 GAP_DAYS = 14          # a longer hole than this means collection was not running
+MIN_COVERAGE = 0.5     # a window covered less than this cannot be reported as itself
 
 
 def follower_growth(csv_dir, days=None):
@@ -125,6 +126,7 @@ def follower_growth(csv_dir, days=None):
     else:
         want = newest - pd.Timedelta(days=days)
     collection_start = series["date"].min()      # when daily pulls actually began
+    wanted_days = max(1, (newest - want).days)
     scoped = series[series["date"] >= want]
     # Truncated means collection did not run back that far, not merely that no
     # reading landed on the window's first day. Readings are a few days apart,
@@ -142,9 +144,15 @@ def follower_growth(csv_dir, days=None):
     first, last = series.iloc[0], series.iloc[-1]
     days = max(1, (last["date"] - first["date"]).days)
     change = last["followers_count"] - first["followers_count"]
+    held = max(1, (last["date"] - first["date"]).days)
+    coverage = min(1.0, held / wanted_days)
     return {
         "enough": True, "days": days, "truncated": truncated,
         "collection_start": collection_start,
+        "wanted_days": wanted_days, "coverage": coverage,
+        # Below this the window shares its numbers with a shorter one, which
+        # reads as a bug. Report the shortfall instead of the duplicate.
+        "reportable": coverage >= MIN_COVERAGE,
         "points": [(r["date"], float(r["followers_count"]))
                    for _, r in series.iterrows()],
         "current": float(last["followers_count"]),
