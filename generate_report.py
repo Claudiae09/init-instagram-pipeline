@@ -308,51 +308,53 @@ def build_tldr(m, types, mon, slots):
 
 # ── page ────────────────────────────────────────────────────────────────────
 CSS = """
-:root{--bg:#ffffff;--fg:#15181f;--muted:#5c6472;--card:#f6f7fa;--line:#e3e6ee;--accent:#4f7cff}
-@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1218;--fg:#e8ebf2;
---muted:#98a1b3;--card:#171b24;--line:#242a36;--accent:#7d9dff}}
-:root[data-theme=dark]{--bg:#0f1218;--fg:#e8ebf2;--muted:#98a1b3;--card:#171b24;--line:#242a36;--accent:#7d9dff}
+/* Light-only on purpose: the embedded Tableau views render on a white canvas,
+   so a dark page would frame them as bright slabs. One theme = one look. */
+:root{color-scheme:light;
+--bg:#ffffff;--fg:#16181d;--muted:#5b6472;--card:#f7f8fa;--line:#e4e7ee;
+--accent:#3d6bf5;--accent-soft:#eef2fe}
 *{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--fg);
 font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif}
-.wrap{max-width:860px;margin:0 auto;padding:40px 20px 72px}
-h1{font-size:1.75rem;line-height:1.25;margin:0 0 6px;letter-spacing:-.02em}
-h2{font-size:1.18rem;margin:44px 0 6px;letter-spacing:-.01em}
-.sub{color:var(--muted);margin:0 0 32px;font-size:.92rem}
-.tldr{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);
-border-radius:10px;padding:22px 24px;margin:0 0 8px}
-.tldr h2{margin:0 0 12px;font-size:1.05rem;text-transform:uppercase;letter-spacing:.06em;
-color:var(--muted);font-weight:600}
-.tldr ol{margin:0;padding-left:20px}
-.tldr li{margin:0 0 12px}
-.tldr li:last-child{margin-bottom:0}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;
-padding:18px;margin:14px 0 0;overflow-x:auto}
-.viz{margin:14px 0 0;border:1px solid var(--line);border-radius:10px;overflow:hidden;
-background:var(--card)}
+.wrap{max-width:900px;margin:0 auto;padding:clamp(24px,5vw,48px) clamp(16px,4vw,24px) 72px}
+h1{font-size:clamp(1.6rem,4.5vw,2.4rem);line-height:1.12;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:clamp(1.05rem,2.6vw,1.3rem);margin:48px 0 8px;letter-spacing:-.01em;line-height:1.3}
+h3{font-size:1rem;margin:26px 0 6px;color:var(--muted);font-weight:600}
+.sub{color:var(--muted);margin:0 0 34px;font-size:.94rem}
+.tldr{background:var(--accent-soft);border:1px solid #d7e0fb;border-radius:14px;
+padding:clamp(18px,4vw,26px);margin:0 0 10px}
+.tldr h2{margin:0 0 14px;font-size:.78rem;text-transform:uppercase;letter-spacing:.09em;
+color:var(--accent);font-weight:700}
+.tldr ol{margin:0;padding-left:22px}
+.tldr li{margin:0 0 13px}.tldr li:last-child{margin-bottom:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+padding:16px;margin:14px 0 0;overflow-x:auto}
+.viz{margin:14px 0 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;
+background:#fff;box-shadow:0 1px 2px rgba(16,24,40,.04)}
 .viz iframe{width:100%;border:0;display:block}
-.explore{display:inline-block;margin:10px 0 0;padding:9px 16px;border-radius:8px;
-background:var(--accent);color:#fff;text-decoration:none;font-size:.9rem;font-weight:600}
-.means{border-left:3px solid var(--line);padding:2px 0 2px 14px;margin:14px 0 0;
+.means{border-left:3px solid var(--line);padding:2px 0 2px 15px;margin:16px 0 0;
 color:var(--muted);font-size:.94rem}
 .means b{color:var(--fg)}
-.rec{margin:12px 0 0;padding:12px 14px;background:var(--card);border:1px solid var(--line);
-border-radius:8px;font-size:.94rem}
-.rec span{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.08em;
+.rec{margin:12px 0 0;padding:14px 16px;background:var(--accent-soft);
+border:1px solid #d7e0fb;border-radius:10px;font-size:.94rem}
+.rec span{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.09em;
 text-transform:uppercase;color:var(--accent);margin-right:8px}
-table{border-collapse:collapse;width:100%;font-size:.9rem}
-th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
-th{color:var(--muted);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em}
-td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
-.cap{max-width:330px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 a{color:var(--accent)}
+.explore{display:inline-block;margin:26px 0 0;padding:11px 20px;border-radius:10px;
+background:var(--accent);color:#fff;text-decoration:none;font-size:.92rem;font-weight:600;
+transition:transform .1s ease,filter .15s ease}
+.explore:hover{filter:brightness(1.07)}
+.explore:active{transform:scale(.97)}
+.explore:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .ax{font-size:11px;fill:var(--muted)}
 .val{font-size:11.5px;fill:var(--fg);font-weight:600}
 .muted{color:var(--muted)}
 .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:10px}
 .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
-footer{margin-top:56px;padding-top:18px;border-top:1px solid var(--line);
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);
 color:var(--muted);font-size:.85rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 """
 
 
