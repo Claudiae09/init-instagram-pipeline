@@ -185,7 +185,7 @@ def saves_vs_shares(m):
     out = [f"<b>Most shared:</b> {sh[0][0].capitalize()}s, {sh[0][1]:.1f} per 1,000.",
            f"<b>Most saved:</b> {sv[0][0].capitalize()}s, {sv[0][1]:.1f} per 1,000."]
     if sh[0][0] == sv[0][0]:
-        out.append(f"The same format wins both, which is rare. Make more "
+        out.append(f"The same content type wins both, which is rare. Make more "
                    f"{sh[0][0]}s.")
     else:
         out.append(f"Use {sv[0][0]}s for deadlines and how-to posts. Use "
@@ -279,15 +279,15 @@ def er_by_format(m):
 
 
 BUILDERS = {
-    "Share rate by format": share_by_format,
+    "Share rate by content type": share_by_format,
     "Reach trend by month": reach_trend,
     "Posting volume vs engagement": volume_vs_engagement,
     "Best day and time to post": best_time,
-    "Saves vs shares by format": saves_vs_shares,
+    "Saves vs shares by content type": saves_vs_shares,
     "Most-shared posts": most_shared,
     "Reel watch time": reel_watch,
     "Reach vs share rate, per post": reach_vs_share_rate,
-    "Engagement rate by format": er_by_format,
+    "Engagement rate by content type": er_by_format,
 }
 
 

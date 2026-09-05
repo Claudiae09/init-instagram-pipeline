@@ -36,15 +36,15 @@ TABLEAU_HOME = (f"https://public.tableau.com/app/profile/{TABLEAU_PROFILE}"
 
 # section title -> published Tableau sheet
 CHARTS = [
-    ("Share rate by format", "Sheet1"),
+    ("Share rate by content type", "Sheet1"),
     ("Reach trend by month", "Sheet2"),
     ("Posting volume vs engagement", "Sheet4"),
     ("Best day and time to post", "Sheet5"),
-    ("Saves vs shares by format", "Sheet7"),
+    ("Saves vs shares by content type", "Sheet7"),
     ("Most-shared posts", "Sheet8"),
     ("Reel watch time", "Sheet9"),
     ("Reach vs share rate, per post", "Sheet3"),
-    ("Engagement rate by format", "Sheet6"),
+    ("Engagement rate by content type", "Sheet6"),
 ]
 
 PERIODS = [("week", "Week", 7, "the week before"),
@@ -425,9 +425,9 @@ def format_section(m):
                          f'role="tabpanel" aria-labelledby="t-fmt-{j}" '
                          f'tabindex="0">{body}</div>')
 
-    return ('<section class="block panel"><h2>By format</h2>'
+    return ('<section class="block panel"><h2>By content type</h2>'
             '<p class="sub2">Follows the period you picked above.</p>'
-            f'<div class="segs" role="tablist" aria-label="Post format">'
+            f'<div class="segs" role="tablist" aria-label="Content type">'
             f'{"".join(fmt_tabs)}</div>'
             + '<p class="sub2 head-sub">How this period compares with the one '
           'before it, and why.</p>'
@@ -896,8 +896,9 @@ color:var(--muted);font-size:var(--fs-small)}
 """
 
 JS = """
-// One period drives the whole page: the recommendations pane and the format
-// panes. Format choice is independent, so the visible pane is (period, format).
+// One period drives the whole page: the recommendations pane and the
+// content-type panes. Content type is chosen independently, so the visible
+// pane is (period, content type).
 //
 // The tabs declare role="tab", which is a promise that arrow keys work and that
 // only the selected tab is in the tab order. Both are implemented below; a
@@ -965,6 +966,7 @@ def build(m):
          period_bar(),
          kpi_panes(m),
          guidance_card(m),
+         format_section(m),
          '<div class="grid">',
          decision_card(m),
          audience_section("growth"),
@@ -972,7 +974,6 @@ def build(m):
          audience_section("who"),
          "</div>",
          competitor_section(m),
-         format_section(m),
          charts_section(m),
          # Build stamp so it is obvious at a glance whether the deployed page
          # is the current one. Without it, a stale deploy is indistinguishable

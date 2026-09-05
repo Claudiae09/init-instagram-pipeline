@@ -169,7 +169,7 @@ def topic_recommendations(tf):
         lo = rows[-1]
         out.append(f"Your subjects sit close together this year, from "
                    f"{top['rate']:.1f} down to {lo['rate']:.1f} per 1,000. "
-                   f"No single subject is running away with it, so format and "
+                   f"No single subject is running away with it, so content type and "
                    f"timing matter more than topic right now.")
 
     sc = tf.get("scope", "")

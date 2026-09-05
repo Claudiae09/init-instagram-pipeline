@@ -111,7 +111,7 @@ def period_recommendations(p):
         out.append(
             f"<b>{top[0]}s led this {p['label'].lower()}</b> at {top[1]:.1f} shares per "
             f"1,000 reached, across {top[2]} post{'s' if top[2] != 1 else ''}. "
-            f"That is the format to make more of."
+            f"That is the content type to make more of."
             + (f" {p['formats'][-1][0]}s trailed at {p['formats'][-1][1]:.1f}."
                if len(p["formats"]) > 1 else ""))
         # Close the contradiction: if an excluded format scores higher than the
@@ -539,7 +539,7 @@ def explain_post(m, post):
                        "would send to a friend. Add a reason to share: name the person "
                        "it helps, or make it feel like news worth passing on")
     if fmt == "IG image":
-        fix.append("single graphics are your weakest format for sharing, so the same "
+        fix.append("single graphics are your weakest content type for sharing, so the same "
                    "message as a carousel usually travels further")
     if not bits:
         bits.append("nothing in the timing, format or caption stands out, so this looks "
