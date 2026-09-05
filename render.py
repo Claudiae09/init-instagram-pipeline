@@ -19,6 +19,7 @@ import pandas as pd
 
 import chart_notes as CN
 import report_sections as R
+import topics as TP
 
 HERE = Path(__file__).resolve().parent
 CSV = HERE / "csv"
@@ -257,6 +258,29 @@ def stories_section():
             + "".join(f"<li>{r}</li>" for r in recs) + "</ul></section>")
 
 
+def topic_section(m):
+    """What subjects to post next, ranked from the account's own history."""
+    tf = TP.topic_findings(m)
+    bullets = "".join(f"<li>{b}</li>" for b in TP.topic_recommendations(tf))
+    table = ""
+    if tf.get("enough"):
+        rows = "".join(
+            f'<tr><td>{esc(r["topic"])}</td><td>{r["posts"]}</td>'
+            f'<td>{r["rate"]:.1f}</td>'
+            f'<td class="{"up" if r["vs_avg"] > 0 else "down"}">'
+            f'{r["vs_avg"]:+.0f}%</td><td>{r["recent"]}</td></tr>'
+            for r in tf["rows"])
+        table = ('<details class="why-mini"><summary><span class="chev">›</span> '
+                 'See every subject</summary><div class="tw"><table class="topics">'
+                 '<thead><tr><th>Subject</th><th>Posts</th><th>Shares<br>per 1k</th>'
+                 '<th>vs your<br>average</th><th>Last<br>30 days</th></tr></thead>'
+                 f'<tbody>{rows}</tbody></table></div></details>')
+    return ('<section class="block"><h2>What to post next</h2>'
+            '<p class="sub2">Ranked by what your own audience shares, since '
+            'Instagram publishes nothing about what is trending.</p>'
+            f'<ul class="csays">{bullets}</ul>{table}</section>')
+
+
 def charts_section(m):
     items = []
     for title, sheet in CHARTS:
@@ -339,6 +363,14 @@ margin:10px 0;font-size:.87rem;color:#6b5518}
 border-radius:8px;padding:11px 14px 11px 30px;margin:0 0 12px;font-size:.88rem;
 line-height:1.55}
 .csays li{margin:0 0 6px}
+.tw{overflow-x:auto}
+table.topics{border-collapse:collapse;width:100%;font-size:.85rem;margin:6px 0 0}
+table.topics th{text-align:left;font-weight:600;color:var(--muted);font-size:.76rem;
+padding:6px 10px 6px 0;border-bottom:1px solid var(--line);line-height:1.25}
+table.topics td{padding:7px 10px 7px 0;border-bottom:1px solid var(--line)}
+table.topics td:first-child{font-weight:500}
+table.topics .up{color:var(--good);font-weight:600}
+table.topics .down{color:#a4472e;font-weight:600}
 .csays li:last-child{margin:0}
 .banner{background:#fff4e0;border:1px solid #efd3a3;border-left:4px solid #d98c1f;
 border-radius:8px;padding:12px 14px;margin:0 0 16px;font-size:.88rem;
@@ -423,6 +455,7 @@ def build(m):
          f'<p class="sub">Updated automatically · {len(m):,} posts analysed · '
          f'latest post {newest:%b %d, %Y}</p>',
          decision_card(m),
+         topic_section(m),
          format_section(m),
          charts_section(m),
          f'<footer>Generated from the Instagram API. Data through '
