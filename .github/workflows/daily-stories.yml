@@ -64,6 +64,11 @@ jobs:
           GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
         run: python write_status.py
 
+      # Between rendering and deploying, so a regression is caught before it
+      # is served rather than after someone notices.
+      - name: Run the invariant tests
+        run: python tests.py
+
       # Deploy straight from here rather than waiting for Cloudflare to notice
       # the commit: one deploy per run instead of one per commit, and failures
       # land in this log rather than a dashboard.
