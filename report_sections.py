@@ -450,3 +450,25 @@ def explain_post(m, post):
                    "the difference in subject and hook")
     return ("Likely why: " + "; ".join(bits) + ".",
             "Try next: " + "; ".join(fix) + "." if fix else "")
+
+
+def format_in_window(m, fmt, days):
+    """Period-scoped view of one format: what it did in this window only.
+    Guidance that needs volume (best time, captions) stays on full history."""
+    w = window(m, days)
+    g = w[w["post_type"] == fmt]
+    if not len(g):
+        return {"posts": 0, "top": None}
+    top = g.nlargest(1, "shares")[
+        ["caption", "permalink", "shares", "reach"]].to_dict("records")[0]
+    tot = g["shares"].sum()
+    return {
+        "posts": len(g),
+        "share_1k": rate(g, "shares"),
+        "reach_med": g["reach"].median(),
+        "top": top,
+        # flag when one post is doing all the work, so the UI can say so
+        "concentrated": bool(tot > 0 and g["shares"].max() / tot > MAX_POST_CONCENTRATION
+                             and len(g) >= 2),
+        "thin": len(g) < MIN_FMT_POSTS,
+    }

@@ -77,7 +77,7 @@ def decision_card(m):
         p = R.compare_periods(m, days, label, prior)
         recs = R.period_recommendations(p)
         active = " is-on" if i == 1 else ""          # default to Month
-        tabs.append(f'<button class="seg{active}" data-tab="p-{key}" '
+        tabs.append(f'<button class="seg{active}" data-period="{key}" '
                     f'role="tab" aria-selected="{str(i == 1).lower()}">{label}</button>')
         span = ("this year so far" if days is None else f"the last {days} days")
         meta = (f"{p['posts']} posts in {span}"
@@ -122,70 +122,82 @@ def decision_card(m):
 
 
 def format_section(m):
-    tabs, panes = [], []
-    for i, fmt in enumerate(R.FORMATS):
-        prof = R.format_profile(m, fmt)
-        if not prof:
-            continue
-        label = FORMAT_LABEL.get(fmt, fmt)
-        active = " is-on" if i == 0 else ""
-        tabs.append(f'<button class="seg{active}" data-tab="f-{i}" role="tab" '
-                    f'aria-selected="{str(i == 0).lower()}">{label}</button>')
+    """Per-format guidance. Headline numbers and the best post follow the period
+    chosen above; best-time and caption guidance stay on the full history,
+    because a single week has too few posts per format to say anything real."""
+    fmt_tabs = []
+    panes = []
+    labels = [(f, FORMAT_LABEL.get(f, f)) for f in R.FORMATS] + [(None, "Stories")]
 
-        bt = prof["best_time"]
-        when = (f"<b>{bt['day']}"
-                + (f" around {hour_label(bt['hour'])}" if bt["hour"] is not None else "")
-                + f"</b> — median reach {bt['median_reach']:,} across {bt['n']} posts"
-                ) if bt else "not enough posts to call a best time yet"
+    for j, (fmt, label) in enumerate(labels):
+        on = " is-on" if j == 0 else ""
+        fmt_tabs.append(f'<button class="seg{on}" data-fmt="{j}" role="tab" '
+                        f'aria-selected="{str(j == 0).lower()}">{label}</button>')
 
-        vs = prof["share_vs_avg"]
-        verdict = ("shares better than your average"
-                   if vs > 5 else "shares worse than your average"
-                   if vs < -5 else "shares about average")
+        for pkey, plabel, days, _prior in PERIODS:
+            show = " is-on" if (j == 0 and pkey == "month") else ""
+            if fmt is None:                                   # Stories pane
+                sf = R.story_findings(CSV)
+                st = ""
+                if sf.get("enough"):
+                    st = (f'<div class="stats">'
+                          f'<div><span>{sf["completion"]:.0f}%</span>watch through</div>'
+                          f'<div><span>{sf["reach_med"]:,.0f}</span>median reach</div>'
+                          f'<div><span>{sf["n"]}</span>collected</div></div>')
+                body = (st + '<p class="line"><b>Collected daily</b>, since stories '
+                        'vanish after 24 hours.</p><ul>'
+                        + "".join(f"<li>{r}</li>" for r in R.story_recommendations(sf))
+                        + "</ul>")
+                panes.append(f'<div class="pane{show}" id="f-{pkey}-{j}" '
+                             f'role="tabpanel">{body}</div>')
+                continue
 
-        caps = R.caption_recommendations(R.caption_findings(m, fmt))
-        top = prof["top_post"]
-        top_cap = esc(str(top["caption"])[:110]) if top else ""
+            w = R.format_in_window(m, fmt, days)
+            prof = R.format_profile(m, fmt)
+            span = "this year" if days is None else f"the last {days} days"
 
-        panes.append(
-            f'<div class="pane{active}" id="f-{i}" role="tabpanel">'
-            f'<div class="stats">'
-            f'<div><span>{prof["share_1k"]:.1f}</span>shares / 1k reached</div>'
-            f'<div><span>{prof["reach_med"]:,.0f}</span>median reach</div>'
-            f'<div><span>{prof["er"]:.1f}%</span>engagement</div>'
-            f'<div><span>{prof["posts"]}</span>posts</div></div>'
-            f'<p class="line"><b>Verdict.</b> {label} {verdict} '
-            f'({vs:+.0f}% vs all formats).</p>'
-            f'<p class="line"><b>Post them:</b> {when}.</p>'
-            f'<p class="line"><b>Captions:</b></p><ul>'
-            + "".join(f"<li>{c}</li>" for c in caps) + "</ul>"
-            + (f'<p class="line"><b>Best performer ({prof["top_scope"]}):</b> '
-               f'<a href="{esc(top["permalink"])}" target="_blank" rel="noopener">'
-               f'{top_cap}…</a> — {top["shares"]:,.0f} shares, '
-               f'{top["reach"]:,.0f} reached.</p>' if top else "")
-            + "</div>")
-    # Stories are a format too — same tab strip, different metrics.
-    sf = R.story_findings(CSV)
-    i = len(tabs)
-    tabs.append(f'<button class="seg" data-tab="f-{i}" role="tab" '
-                f'aria-selected="false">Stories</button>')
-    if sf.get("enough"):
-        st = (f'<div class="stats">'
-              f'<div><span>{sf["completion"]:.0f}%</span>watch through</div>'
-              f'<div><span>{sf["reach_med"]:,.0f}</span>median reach</div>'
-              f'<div><span>{sf["n"]}</span>collected</div></div>')
-    else:
-        st = ""
-    panes.append(
-        f'<div class="pane" id="f-{i}" role="tabpanel">{st}'
-        '<p class="line"><b>Collected daily</b>, since stories vanish after 24 hours.</p>'
-        "<ul>" + "".join(f"<li>{r}</li>" for r in R.story_recommendations(sf))
-        + "</ul></div>")
+            if not w["posts"]:
+                body = (f'<p class="line">No {label.lower()} posted in {span}.</p>')
+            else:
+                warn = ""
+                if w["concentrated"]:
+                    warn = ('<p class="note">One post accounts for most of these '
+                            'shares — read this as a single result, not a pattern.</p>')
+                elif w["thin"]:
+                    warn = (f'<p class="note">Only {w["posts"]} post'
+                            f'{"s" if w["posts"] != 1 else ""} in {span} — directional '
+                            f'at best.</p>')
+                t = w["top"]
+                body = (
+                    f'<div class="stats">'
+                    f'<div><span>{w["share_1k"]:.1f}</span>shares / 1k · {span}</div>'
+                    f'<div><span>{w["reach_med"]:,.0f}</span>median reach</div>'
+                    f'<div><span>{w["posts"]}</span>posts in {span}</div></div>'
+                    + warn
+                    + (f'<p class="line"><b>Best {label.lower()} of {span}:</b> '
+                       f'<a href="{esc(t["permalink"])}" target="_blank" rel="noopener">'
+                       f'{esc(str(t["caption"])[:100])}…</a> — {t["shares"]:,.0f} shares, '
+                       f'{t["reach"]:,.0f} reached.</p>' if t else ""))
+
+            # guidance that needs the full history
+            bt = prof["best_time"] if prof else None
+            when = (f'<b>{bt["day"]}'
+                    + (f' around {hour_label(bt["hour"])}' if bt["hour"] is not None else "")
+                    + f'</b> (median reach {bt["median_reach"]:,} across {bt["n"]} posts)'
+                    ) if bt else "not enough posts to call a best time"
+            caps = R.caption_recommendations(R.caption_findings(m, fmt))
+            body += (f'<p class="line"><b>Post them:</b> {when}.</p>'
+                     f'<p class="line"><b>Captions:</b></p><ul>'
+                     + "".join(f"<li>{c}</li>" for c in caps) + "</ul>"
+                     + f'<p class="allhist">Timing and caption guidance use all '
+                       f'{prof["posts"]} {label.lower()} — too few in a single '
+                       f'{"year" if days is None else "window"} to be reliable.</p>')
+            panes.append(f'<div class="pane{show}" id="f-{pkey}-{j}" '
+                         f'role="tabpanel">{body}</div>')
 
     return ('<section class="block"><h2>By format</h2>'
-            '<p class="sub2">What each format is for, when to post it, and how to '
-            'write it.</p>'
-            f'<div class="segs" role="tablist">{"".join(tabs)}</div>'
+            '<p class="sub2">Follows the period you picked above.</p>'
+            f'<div class="segs" role="tablist">{"".join(fmt_tabs)}</div>'
             + "".join(panes) + "</section>")
 
 
@@ -269,6 +281,9 @@ color:var(--accent);display:flex;align-items:center;gap:6px;padding:4px 0}
 ul.weak{margin:6px 0 4px;padding-left:20px;font-size:.9rem}
 ul.weak li{margin:0 0 6px}
 .dim{color:var(--muted);font-size:.85em}
+.note{background:#fff8e6;border:1px solid #f0e0b8;border-radius:8px;padding:9px 12px;
+margin:10px 0;font-size:.87rem;color:#6b5518}
+.allhist{color:var(--muted);font-size:.82rem;margin:10px 0 0;font-style:italic}
 .diag,.fix{display:block;font-size:.87rem;margin-top:4px;line-height:1.5}
 .diag{color:var(--muted)}
 .fix{color:var(--good);font-weight:500}
@@ -309,21 +324,35 @@ color:var(--muted);font-size:.84rem}
 """
 
 JS = """
-document.querySelectorAll('.segs').forEach(function(group){
-  group.addEventListener('click', function(e){
-    var btn = e.target.closest('.seg'); if(!btn) return;
-    var panes = [];
-    group.querySelectorAll('.seg').forEach(function(b){
+// One period drives the whole page: the recommendations pane and the format
+// panes. Format choice is independent, so the visible pane is (period, format).
+(function () {
+  var state = { period: 'month', fmt: '0' };
+
+  function apply() {
+    document.querySelectorAll('[id^="p-"].pane').forEach(function (el) {
+      el.classList.toggle('is-on', el.id === 'p-' + state.period);
+    });
+    document.querySelectorAll('[id^="f-"].pane').forEach(function (el) {
+      el.classList.toggle('is-on', el.id === 'f-' + state.period + '-' + state.fmt);
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.seg');
+    if (!btn) return;
+    var group = btn.parentElement;
+    group.querySelectorAll('.seg').forEach(function (b) {
       b.classList.toggle('is-on', b === btn);
       b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
-      panes.push(b.dataset.tab);
     });
-    panes.forEach(function(id){
-      var el = document.getElementById(id);
-      if(el) el.classList.toggle('is-on', id === btn.dataset.tab);
-    });
+    if (btn.dataset.period) state.period = btn.dataset.period;
+    if (btn.dataset.fmt) state.fmt = btn.dataset.fmt;
+    apply();
   });
-});
+
+  apply();
+})();
 """
 
 
