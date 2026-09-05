@@ -270,8 +270,10 @@ def topic_section(m):
             f'<td class="{"up" if r["vs_avg"] > 0 else "down"}">'
             f'{r["vs_avg"]:+.0f}%</td><td>{r["recent"]}</td></tr>'
             for r in tf["rows"])
-        table = ('<details class="why-mini"><summary><span class="chev">›</span> '
-                 'See every subject</summary><div class="tw"><table class="topics">'
+        # open by default: this table is the answer to "what should we post",
+        # and hiding it behind a click meant it went unnoticed
+        table = ('<details class="why-mini" open><summary><span class="chev">›</span> '
+                 'Every subject</summary><div class="tw"><table class="topics">'
                  '<thead><tr><th>Subject</th><th>Posts</th><th>Shares<br>per 1k</th>'
                  '<th>vs your<br>average</th><th>Last<br>30 days</th></tr></thead>'
                  f'<tbody>{rows}</tbody></table></div></details>')
