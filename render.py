@@ -20,6 +20,7 @@ import pandas as pd
 import audience as AU
 import timing as TM
 import chart_notes as CN
+import hooks as HK
 import competitors as CP
 import report_sections as R
 import topics as TP
@@ -502,10 +503,38 @@ def topic_section(m):
                  '<th class="n">Shares / 1k</th><th class="n">vs avg</th>'
                  '<th class="n">Last 30d</th></tr></thead>'
                  f'<tbody>{rows}</tbody></table></div>')
+    hf = HK.hook_findings(m)
+    hook_block = ""
+    if hf.get("enough"):
+        rows = "".join(
+            f'<tr><td>{esc(r["style"][0].upper() + r["style"][1:])}'
+            + (f'<span class="eg"><a class="tlink" href="{esc(r["example"]["link"])}"'
+               f' target="_blank" rel="noopener">'
+               f'{esc(r["example"]["text"])}</a></span>'
+               if r["example"]["link"] else "")
+            + f'</td><td class="n">{r["posts"]}</td>'
+              f'<td class="n">{r["rate"]:.1f}</td>'
+              f'<td class="n {"up" if r["vs_avg"] > 0 else "down"}">'
+              f'{r["vs_avg"]:+.0f}%'
+            + ('<span class="skew" title="One post accounts for most of this '
+               'style\'s shares">*</span>' if r["skewed"] else "")
+            + '</td></tr>'
+            for r in hf["rows"])
+        hook_block = (
+            '<h3>Hooks that work</h3>'
+            '<p class="sub2">How a caption opens, measured against how often '
+            'the post gets shared. Each row links to the best example.</p>'
+            '<ul class="csays">'
+            + "".join(f"<li>{b}</li>" for b in HK.hook_recommendations(hf))
+            + '</ul><div class="tw"><table class="topics compact"><thead><tr>'
+              '<th>Opening</th><th class="n">Posts</th>'
+              '<th class="n">Shares / 1k</th><th class="n">vs avg</th>'
+              f'</tr></thead><tbody>{rows}</tbody></table></div>')
+
     return ('<section class="block panel"><h2>What to post next</h2>'
             '<p class="sub2">Ranked by what your own audience shares, since '
             'Instagram publishes nothing about what is trending.</p>'
-            f'<ul class="csays">{bullets}</ul>{table}</section>')
+            f'<ul class="csays">{bullets}</ul>{table}{hook_block}</section>')
 
 
 def growth_chart(g, w=600, h=130, pad=10):
