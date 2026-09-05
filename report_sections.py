@@ -140,9 +140,24 @@ def format_profile(m, fmt):
         "reach_med": g["reach"].median(),
         "share_vs_avg": pct_change(rate(allm, "shares"), rate(g, "shares")),
         "best_time": best_time_for(m, fmt),
-        "top_post": g.nlargest(1, "shares")[
-            ["caption", "permalink", "shares", "reach"]].to_dict("records")[0],
+        # Best performer is scoped to the current year — a 2024 post is not a
+        # useful template for what to make this semester.
+        **_top_post_this_year(g),
     }
+
+
+def _top_post_this_year(g):
+    """Top post of the current year, falling back to all-time if none yet."""
+    year = dt.date.today().year
+    cur = g[g["d"].dt.year == year] if "d" in g.columns else g.iloc[0:0]
+    scope, pool = str(year), cur
+    if not len(pool):
+        scope, pool = "all time", g
+    if not len(pool):
+        return {"top_post": None, "top_scope": scope}
+    return {"top_post": pool.nlargest(1, "shares")[
+        ["caption", "permalink", "shares", "reach"]].to_dict("records")[0],
+        "top_scope": scope}
 
 
 # ── caption findings ────────────────────────────────────────────────────────

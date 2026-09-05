@@ -130,11 +130,29 @@ def format_section(m):
             f'<p class="line"><b>Post them:</b> {when}.</p>'
             f'<p class="line"><b>Captions:</b></p><ul>'
             + "".join(f"<li>{c}</li>" for c in caps) + "</ul>"
-            + (f'<p class="line"><b>Best performer:</b> '
+            + (f'<p class="line"><b>Best performer ({prof["top_scope"]}):</b> '
                f'<a href="{esc(top["permalink"])}" target="_blank" rel="noopener">'
                f'{top_cap}…</a> — {top["shares"]:,.0f} shares, '
                f'{top["reach"]:,.0f} reached.</p>' if top else "")
             + "</div>")
+    # Stories are a format too — same tab strip, different metrics.
+    sf = R.story_findings(CSV)
+    i = len(tabs)
+    tabs.append(f'<button class="seg" data-tab="f-{i}" role="tab" '
+                f'aria-selected="false">Stories</button>')
+    if sf.get("enough"):
+        st = (f'<div class="stats">'
+              f'<div><span>{sf["completion"]:.0f}%</span>watch through</div>'
+              f'<div><span>{sf["reach_med"]:,.0f}</span>median reach</div>'
+              f'<div><span>{sf["n"]}</span>collected</div></div>')
+    else:
+        st = ""
+    panes.append(
+        f'<div class="pane" id="f-{i}" role="tabpanel">{st}'
+        '<p class="line"><b>Collected daily</b>, since stories vanish after 24 hours.</p>'
+        "<ul>" + "".join(f"<li>{r}</li>" for r in R.story_recommendations(sf))
+        + "</ul></div>")
+
     return ('<section class="block"><h2>By format</h2>'
             '<p class="sub2">What each format is for, when to post it, and how to '
             'write it.</p>'
@@ -275,7 +293,6 @@ def build(m):
          f'latest post {newest:%b %d, %Y}</p>',
          decision_card(m),
          format_section(m),
-         stories_section(),
          charts_section(),
          f'<footer>Generated from the Instagram API. Data through '
          f'{newest:%B %d, %Y}; the page rebuilds itself every week.</footer>',
