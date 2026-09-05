@@ -91,7 +91,7 @@ def audience_recommendations(af):
 GAP_DAYS = 14          # a longer hole than this means collection was not running
 
 
-def follower_growth(csv_dir):
+def follower_growth(csv_dir, days=None):
     """Follower counts over the continuously-collected stretch.
 
     Readings exist from before the daily job started, separated by a 54 day
@@ -117,19 +117,39 @@ def follower_growth(csv_dir):
             start = i
     series = d.iloc[start:]
     dropped = d.iloc[:start]
-    if len(series) < 3:
+
+    # Scope to the selected period. `days=None` means this calendar year.
+    newest = series["date"].max()
+    if days is None:
+        want = pd.Timestamp(year=newest.year, month=1, day=1)
+    else:
+        want = newest - pd.Timedelta(days=days)
+    collection_start = series["date"].min()      # when daily pulls actually began
+    scoped = series[series["date"] >= want]
+    # Truncated means collection did not run back that far, not merely that no
+    # reading landed on the window's first day. Readings are a few days apart,
+    # so comparing against the window edge would flag every week as partial.
+    truncated = bool(series["date"].min() > want)
+    if len(scoped) >= 2:
+        series = scoped
+    elif len(series) < 2:
+        return {"enough": False}
+    else:
+        truncated = True
+    if len(series) < 2:
         return {"enough": False}
 
     first, last = series.iloc[0], series.iloc[-1]
     days = max(1, (last["date"] - first["date"]).days)
     change = last["followers_count"] - first["followers_count"]
     return {
-        "enough": True,
+        "enough": True, "days": days, "truncated": truncated,
+        "collection_start": collection_start,
         "points": [(r["date"], float(r["followers_count"]))
                    for _, r in series.iterrows()],
         "current": float(last["followers_count"]),
         "change": float(change),
-        "days": days,
+        "span": days,
         "per_week": change / days * 7,
         "pct": (change / first["followers_count"] * 100)
                if first["followers_count"] else 0,
@@ -148,9 +168,12 @@ def growth_note(g):
     out = [f"<b>{'Working' if up else 'Not working'}:</b> "
            f"{'up' if up else 'down'} <b>{abs(g['change']):,.0f} followers</b> "
            f"in {g['days']} days, about {abs(g['per_week']):,.0f} a week."]
-    if g.get("earlier"):
-        out.append(f"Daily tracking began {g['since']:%d %b}. The reading before "
-                   f"that was {g['earlier']['count']:,.0f} on "
-                   f"{g['earlier']['date']:%d %b}, with nothing measured in "
-                   f"between.")
+    # Only disclose the gap when this window actually reaches past collection.
+    if g.get("truncated"):
+        out.append(f"This period only holds {g['days']} days of readings. Daily "
+                   f"tracking began {g['collection_start']:%d %b}"
+                   + (f", and the reading before that was "
+                      f"{g['earlier']['count']:,.0f} on {g['earlier']['date']:%d %b} "
+                      f"with nothing measured in between."
+                      if g.get("earlier") else "."))
     return out

@@ -73,11 +73,43 @@ def hour_label(h):
 
 
 # ── page pieces ─────────────────────────────────────────────────────────────
-def kpi_strip(m):
+def kpi_panes(m):
+    """One KPI strip per period; the page-level control swaps them."""
+    out = []
+    for i, (key, label, days, _p) in enumerate(PERIODS):
+        on = " is-on" if i == 1 else ""
+        out.append(f'<div class="pane{on}" id="k-{key}" role="tabpanel" '
+                   f'aria-labelledby="t-{key}">{kpi_strip(m, days, label)}</div>')
+    return "".join(out)
+
+
+def period_bar():
+    """The period control, lifted out of the decision card.
+
+    It always drove the format panes further down the page as well, which meant
+    clicking it changed things the reader could not see. As a page-level filter
+    it looks like what it is.
+    """
+    tabs = []
+    for i, (key, label, days, _prior) in enumerate(PERIODS):
+        sel = (i == 1)
+        tabs.append(f'<button class="seg{" is-on" if sel else ""}" '
+                    f'data-period="{key}" id="t-{key}" role="tab" '
+                    f'aria-controls="k-{key} p-{key} g-{key}" '
+                    f'aria-selected="{str(sel).lower()}" '
+                    f'tabindex="{0 if sel else -1}">{label}</button>')
+    return ('<div class="toolbar"><span class="tlabel">Showing</span>'
+            f'<div class="segs" role="tablist" aria-label="Time period">'
+            f'{"".join(tabs)}</div>'
+            '<span class="thint">Changes every section below</span></div>')
+
+
+def kpi_strip(m, days, label):
     """The four numbers someone opens a dashboard to see, before any prose."""
-    g = AU.follower_growth(CSV)
-    cur = R.window(m, 30)
-    prev = R.window(m, 30, offset=30)
+    g = AU.follower_growth(CSV, days)
+    cur = R.window(m, days)
+    prev = R.window(m, days, offset=days) if days else R.window(m, None, offset=1)
+    span = label.lower()
     tiles = []
 
     if g.get("enough"):
@@ -89,12 +121,12 @@ def kpi_strip(m):
         now, before = R.rate(cur, "shares"), R.rate(prev, "shares")
         ch = R.pct_change(before, now)
         tiles.append(("Shares per 1k", f"{now:.1f}",
-                      (f"{ch:+.0f}% vs previous 30 days" if len(prev) else
-                       "last 30 days"),
+                      (f"{ch:+.0f}% vs previous {span}" if len(prev) else
+                       f"this {span}"),
                       "up" if ch >= 0 else "down"))
         tiles.append(("Median reach", f"{cur['reach'].median():,.0f}",
-                      "per post, last 30 days", ""))
-        tiles.append(("Posts", f"{len(cur)}", "in the last 30 days", ""))
+                      f"per post, this {span}", ""))
+        tiles.append(("Posts", f"{len(cur)}", f"this {span}", ""))
     if not tiles:
         return ""
     cells = "".join(
@@ -107,7 +139,7 @@ def kpi_strip(m):
 
 def decision_card(m):
     """The one thing at the top: recommendations, switchable by period."""
-    tabs, panes = [], []
+    panes = []
     # Compare each period against the others first. A week can point one way
     # and the month the other, and switching tabs then reads as the page
     # contradicting itself unless we say which to trust.
@@ -130,11 +162,7 @@ def decision_card(m):
                     f"month for direction and use the week to spot what just "
                     f"changed.</i>")
         active = " is-on" if i == 1 else ""          # default to Month
-        sel = (i == 1)
-        tabs.append(f'<button class="seg{active}" data-period="{key}" id="t-{key}" '
-                    f'role="tab" aria-controls="p-{key}" '
-                    f'aria-selected="{str(sel).lower()}" '
-                    f'tabindex="{0 if sel else -1}">{label}</button>')
+
         span = ("this year so far" if days is None else f"the last {days} days")
         meta = (f"{p['posts']} posts in {span}"
                 if p.get("enough") else "not enough posts yet")
@@ -173,9 +201,7 @@ def decision_card(m):
             + "".join(f"<li>{r}</li>" for r in recs) + "</ol>" + why + "</div>")
     return (
         '<section class="decision">'
-        '<div class="decision-head"><h2>What changed</h2>'
-        f'<div class="segs" role="tablist" aria-label="Time period">'
-        f'{"".join(tabs)}</div></div>'
+        '<div class="decision-head"><h2>What changed</h2></div>'
         + '<p class="sub2 head-sub">How this period compares with the one '
           'before it, and why.</p>'
         + "".join(panes) + "</section>")
@@ -281,10 +307,13 @@ def format_section(m):
                     f'<div><span>{w["reach_med"]:,.0f}</span>median reach</div>'
                     f'<div><span>{w["posts"]}</span>posts in {span}</div></div>'
                     + warn
-                    + (f'<p class="line"><b>Best {label.lower()} of {span}:</b> '
-                       f'<a href="{esc(t["permalink"])}" target="_blank" rel="noopener">'
-                       f'{esc(str(t["caption"])[:100])}…</a> with {t["shares"]:,.0f} shares, '
-                       f'{t["reach"]:,.0f} reached.</p>' if t else ""))
+                    + (f'<div class="best"><span class="bk">Best '
+                       f'{label.lower()} of {span}</span>'
+                       f'<a class="tlink" href="{esc(t["permalink"])}" '
+                       f'target="_blank" rel="noopener">'
+                       f'{esc(str(t["caption"])[:88])}…</a>'
+                       f'<span class="bm">{t["shares"]:,.0f} shares · '
+                       f'{t["reach"]:,.0f} reached</span></div>' if t else ""))
 
             # guidance that needs the full history
             bt = prof["best_time"] if prof else None
@@ -303,7 +332,7 @@ def format_section(m):
                          f'role="tabpanel" aria-labelledby="t-fmt-{j}" '
                          f'tabindex="0">{body}</div>')
 
-    return ('<section class="block"><h2>By format</h2>'
+    return ('<section class="block panel"><h2>By format</h2>'
             '<p class="sub2">Follows the period you picked above.</p>'
             f'<div class="segs" role="tablist" aria-label="Post format">'
             f'{"".join(fmt_tabs)}</div>'
@@ -415,6 +444,30 @@ def growth_chart(g, w=600, h=130, pad=10):
         f'<span>{g["until"]:%d %b}</span></div>')
 
 
+def _growth_pane(i, key, days):
+    """Follower movement for one period. Same control, same state."""
+    g = AU.follower_growth(CSV, days)
+    on = " is-on" if i == 1 else ""
+    if not g.get("enough"):
+        body = ('<p class="line">Not enough follower readings in this period '
+                'yet.</p>')
+    else:
+        up = g["change"] >= 0
+        body = (
+            '<div class="growth">'
+            f'<div class="gchart">{growth_chart(g)}</div>'
+            '<div class="gnums">'
+            f'<div><span>{g["current"]:,.0f}</span>followers now</div>'
+            f'<div><span class="{"up" if up else "down"}">{g["change"]:+,.0f}</span>'
+            f'in {g["days"]} days</div>'
+            f'<div><span>{g["per_week"]:+,.0f}</span>a week</div>'
+            '</div></div>'
+            + '<ul class="csays">'
+            + "".join(f"<li>{n}</li>" for n in AU.growth_note(g)) + "</ul>")
+    return (f'<div class="pane{on}" id="g-{key}" role="tabpanel" '
+            f'aria-labelledby="t-{key}">{body}</div>')
+
+
 def audience_section(part):
     """Who follows the account. The only part of the page not about posts.
 
@@ -437,21 +490,8 @@ def audience_section(part):
             for seg, _, pct in sorted(age["segments"],
                                       key=lambda x: x[0]))
         bars = f'<div class="bars">{rows}</div>'
-    g = AU.follower_growth(CSV)
-    growth = ""
-    if g.get("enough"):
-        up = g["change"] >= 0
-        growth = (
-            '<div class="growth">'
-            f'<div class="gchart">{growth_chart(g)}</div>'
-            '<div class="gnums">'
-            f'<div><span>{g["current"]:,.0f}</span>followers now</div>'
-            f'<div><span class="{"up" if up else "down"}">'
-            f'{g["change"]:+,.0f}</span>in {g["days"]} days</div>'
-            f'<div><span>{g["per_week"]:+,.0f}</span>a week</div>'
-            '</div></div>'
-            + '<ul class="csays">'
-            + "".join(f"<li>{n}</li>" for n in AU.growth_note(g)) + "</ul>")
+    growth = "".join(_growth_pane(i, k, d)
+                     for i, (k, _l, d, _p) in enumerate(PERIODS))
 
     if part == "growth":
         return ('<section class="block panel"><h2>Followers</h2>'
@@ -526,18 +566,25 @@ body{margin:0;background:var(--bg);color:var(--fg);
 font:var(--fs-body)/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif}
 .wrap{max-width:1120px;margin:0 auto;padding:clamp(28px,5vw,52px) clamp(16px,4vw,24px) 80px}
 
-h1{font-size:clamp(25px,4.4vw,var(--fs-title));line-height:1.14;margin:0 0 6px;
+h1{font-size:clamp(29px,4.4vw,var(--fs-title));line-height:1.14;margin:0 0 6px;
 letter-spacing:-.02em}
 h2{font-size:var(--fs-lead);margin:0;letter-spacing:-.01em;line-height:1.25}
 h3{font-size:var(--fs-small);margin:26px 0 8px;color:var(--muted);font-weight:600}
 .sub{color:var(--muted);margin:0 0 30px;font-size:var(--fs-small)}
 .sub2{color:var(--muted);margin:6px 0 14px;font-size:var(--fs-small)}
 
+/* ── the one page-level control ─────────────────────────────────────────── */
+.toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+margin:0 0 18px;padding:0 0 16px;border-bottom:1px solid var(--line)}
+.tlabel{font-size:var(--fs-micro);font-weight:600;color:var(--muted);
+text-transform:uppercase;letter-spacing:.02em}
+.thint{font-size:var(--fs-micro);color:var(--muted)}
+
 /* ── dashboard layout ───────────────────────────────────────────────────── */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
 gap:12px;margin:0 0 22px}
 .kpi{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
-box-shadow:var(--shadow);padding:16px 18px;display:flex;flex-direction:column;gap:2px}
+padding:16px 18px;display:flex;flex-direction:column;gap:2px}
 .kl{font-size:var(--fs-micro);color:var(--muted);font-weight:600;
 letter-spacing:.02em;text-transform:uppercase}
 .kv{font-size:var(--fs-title);font-weight:700;letter-spacing:-.03em;line-height:1.05;
@@ -549,10 +596,10 @@ font-variant-numeric:tabular-nums}
 /* Two columns on a real screen, stacked on a phone. The point of a dashboard
    is seeing more than one thing at once. */
 .grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);
-gap:20px;align-items:start;margin:0 0 22px}
+gap:20px;align-items:stretch;margin:0 0 22px}
 .grid > *{margin:0}
 .panel{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
-box-shadow:var(--shadow);padding:clamp(18px,2.5vw,24px)}
+padding:clamp(18px,2.5vw,24px)}
 
 /* ── surface 1: the answer. The only raised thing on the page. ───────────── */
 .decision{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
@@ -591,6 +638,8 @@ transition:background .15s ease,color .15s ease,transform .1s ease}
 .seg:hover{color:var(--fg)}
 .seg:active{transform:scale(.97)}
 .seg:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);
+outline-offset:3px;border-radius:4px}
 .seg.is-on{background:var(--accent);color:#fff}
 .pane{display:none}.pane.is-on{display:block}
 .pane:focus{outline:none}
@@ -632,12 +681,21 @@ ul.weak li{margin:0 0 14px}
 /* ── stat tiles. The first figure is the argument; the rest are context. ─── */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;
 margin:14px 0 18px}
-.stats div{background:var(--card);border:1px solid var(--line);
-border-radius:var(--r-sm);padding:12px 14px;font-size:var(--fs-micro);
+.stats div{background:var(--bg);border:1px solid var(--line);
+border-radius:var(--r-lg);padding:16px 18px;font-size:var(--fs-micro);
 color:var(--muted);line-height:1.35}
-.stats span{display:block;font-size:var(--fs-body);font-weight:700;color:var(--fg);
-letter-spacing:-.02em;margin-bottom:2px}
-.stats div:first-child span{font-size:var(--fs-lead)}
+.stats span{display:block;font-size:var(--fs-lead);font-weight:700;color:var(--fg);
+letter-spacing:-.02em;margin-bottom:2px;font-variant-numeric:tabular-nums}
+
+/* The best performing post, styled like a subject row rather than a sentence
+   with a long link wrapping through it. */
+.best{background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);
+padding:12px 14px;margin:0 0 14px}
+.bk{display:block;font-size:var(--fs-micro);font-weight:600;color:var(--muted);
+text-transform:uppercase;letter-spacing:.02em;margin-bottom:4px}
+.best .tlink{font-size:var(--fs-small)}
+.bm{display:block;font-size:var(--fs-micro);color:var(--muted);margin-top:4px;
+font-variant-numeric:tabular-nums}
 
 /* ── the subject table ──────────────────────────────────────────────────── */
 .tw{overflow-x:auto}
@@ -645,6 +703,9 @@ table.topics{border-collapse:collapse;width:100%;font-size:var(--fs-small);margi
 table.topics th{text-align:left;font-weight:600;color:var(--muted);
 font-size:var(--fs-micro);padding:6px 10px 6px 0;border-bottom:1px solid var(--line);
 line-height:1.25;white-space:nowrap}
+/* Matches the specificity of the rule above; `th.n` alone lost to it and the
+   headers sat left over right-aligned numbers. */
+table.topics th.n{text-align:right}
 table.topics td{padding:8px 10px 8px 0;border-bottom:1px solid var(--line)}
 table.topics td:first-child{font-weight:500;min-width:190px}
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;padding-right:0}
@@ -675,7 +736,11 @@ line-height:1.3}
 .gnums span{display:block;font-size:var(--fs-lead);font-weight:700;color:var(--fg);
 letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .gnums .up{color:var(--good)}.gnums .down{color:var(--bad)}
-.head-sub{margin:-8px 0 14px}
+/* The negative margin closes a gap under the heading row. Under a tab row
+   there is no gap to close, and it pulled the text into the buttons. */
+.head-sub{margin:0 0 14px}
+.decision-head + .head-sub{margin-top:-8px}
+.segs + .head-sub{margin-top:12px}
 
 /* ── audience bars ──────────────────────────────────────────────────────── */
 .bars{margin:14px 0 16px}
@@ -727,8 +792,12 @@ JS = """
   var state = { period: 'month', fmt: '0' };
 
   function apply() {
-    document.querySelectorAll('[id^="p-"].pane').forEach(function (el) {
-      el.classList.toggle('is-on', el.id === 'p-' + state.period);
+    // Every prefix here is period-keyed: KPI strip, recommendations, follower
+    // growth. One control, one state, whole page.
+    ['k', 'p', 'g'].forEach(function (prefix) {
+      document.querySelectorAll('[id^="' + prefix + '-"].pane').forEach(function (el) {
+        el.classList.toggle('is-on', el.id === prefix + '-' + state.period);
+      });
     });
     document.querySelectorAll('[id^="f-"].pane').forEach(function (el) {
       el.classList.toggle('is-on', el.id === 'f-' + state.period + '-' + state.fmt);
@@ -779,7 +848,8 @@ def build(m):
          "<h1>INIT FIU · Instagram</h1>",
          f'<p class="sub">Updated automatically · {len(m):,} posts analysed · '
          f'latest post {newest:%b %d, %Y}</p>',
-         kpi_strip(m),
+         period_bar(),
+         kpi_panes(m),
          '<div class="grid">',
          decision_card(m),
          audience_section("growth"),
