@@ -264,16 +264,31 @@ def topic_section(m):
     bullets = "".join(f"<li>{b}</li>" for b in TP.topic_recommendations(tf))
     table = ""
     if tf.get("enough"):
-        rows = "".join(
-            f'<tr><td>{esc(r["topic"])}</td><td>{r["posts"]}</td>'
-            f'<td>{r["rate"]:.1f}</td>'
-            f'<td class="{"up" if r["vs_avg"] > 0 else "down"}">'
-            f'{r["vs_avg"]:+.0f}%</td><td>{r["recent"]}</td></tr>'
-            for r in tf["rows"])
+        # The subject name links to a real post, because "member spotlights"
+        # means nothing until you can see one.
+        cells = []
+        for r in tf["rows"]:
+            name = esc(r["topic"])
+            eg = esc(r.get("example") or "")
+            if r.get("link"):
+                subject = (f'<a class="tlink" href="{esc(r["link"])}" target="_blank" '
+                           f'rel="noopener">{name}'
+                           + (f'<span class="eg">{eg}</span>' if eg else "")
+                           + "</a>")
+            else:
+                subject = name
+            cells.append(
+                f'<tr><td>{subject}</td><td>{r["posts"]}</td>'
+                f'<td>{r["rate"]:.1f}</td>'
+                f'<td class="{"up" if r["vs_avg"] > 0 else "down"}">'
+                f'{r["vs_avg"]:+.0f}%</td><td>{r["recent"]}</td></tr>')
+        rows = "".join(cells)
         # open by default: this table is the answer to "what should we post",
         # and hiding it behind a click meant it went unnoticed
         table = ('<details class="why-mini" open><summary><span class="chev">›</span> '
-                 'Every subject</summary><div class="tw"><table class="topics">'
+                 'Every subject</summary>'
+                 '<p class="sub2">Each subject links to a real example post.</p>'
+                 '<div class="tw"><table class="topics">'
                  '<thead><tr><th>Subject</th><th>Posts</th><th>Shares<br>per 1k</th>'
                  '<th>vs your<br>average</th><th>Last<br>30 days</th></tr></thead>'
                  f'<tbody>{rows}</tbody></table></div></details>')
@@ -370,7 +385,11 @@ table.topics{border-collapse:collapse;width:100%;font-size:.85rem;margin:6px 0 0
 table.topics th{text-align:left;font-weight:600;color:var(--muted);font-size:.76rem;
 padding:6px 10px 6px 0;border-bottom:1px solid var(--line);line-height:1.25}
 table.topics td{padding:7px 10px 7px 0;border-bottom:1px solid var(--line)}
-table.topics td:first-child{font-weight:500}
+table.topics td:first-child{font-weight:500;min-width:190px}
+a.tlink{color:var(--accent);text-decoration:none;display:block}
+a.tlink:hover{text-decoration:underline}
+a.tlink .eg{display:block;color:var(--muted);font-weight:400;font-size:.78rem;
+line-height:1.35;margin-top:2px;text-decoration:none}
 table.topics .up{color:var(--good);font-weight:600}
 table.topics .down{color:#a4472e;font-weight:600}
 .csays li:last-child{margin:0}

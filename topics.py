@@ -36,7 +36,32 @@ def _tag(m):
     m = m[m["caption"].notna() & (m["reach"] > 0)].copy()
     for name, pat in TOPICS.items():
         m[name] = m["caption"].str.contains(pat, case=False, regex=True, na=False)
+    # How many subjects each post matches. A post about everything is a poor
+    # illustration of any one subject.
+    m["_ntopics"] = m[list(TOPICS)].sum(axis=1)
     return m
+
+
+def _example(g):
+    """The post to point at for this subject: the one people shared most per
+    viewer. A minimum reach keeps a fluke with 30 viewers from being the
+    example everyone is told to copy."""
+    pool = g[g["reach"] >= 200]
+    if not len(pool):
+        pool = g
+    # Prefer a post that is mostly about THIS subject, so the same catch-all
+    # post doesn't end up illustrating half the table.
+    for limit in (1, 2, 3):
+        focused = pool[pool["_ntopics"] <= limit]
+        if len(focused) >= 3:
+            pool = focused
+            break
+    pool = pool.assign(_r=pool["shares"] / pool["reach"] * 1000)
+    best = pool.sort_values("_r", ascending=False).iloc[0]
+    cap = str(best.get("caption") or "").replace("\n", " ").strip()
+    return {"link": best.get("permalink") or "",
+            "example": (cap[:52].rstrip() + "…") if len(cap) > 52 else cap,
+            "example_rate": float(best["_r"])}
 
 
 def topic_findings(m):
@@ -59,6 +84,7 @@ def topic_findings(m):
             "topic": name, "posts": len(g),
             "rate": g["shares"].sum() / g["reach"].sum() * 1000,
             "recent": int(recent[name].sum()) if len(recent) else 0,
+            **_example(g),
         })
     if not rows:
         return {"enough": False}
