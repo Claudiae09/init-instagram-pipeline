@@ -49,6 +49,13 @@ def audience_recommendations(af):
                 f"{top[2]:.0f}%, while students aged 18 to 24 are only "
                 f"{student:.0f}%. Most of the people you reach have aged past "
                 f"the students you recruit.")
+            out.append(
+                f"<b>What that means for content:</b> a post written as though "
+                f"the reader is on campus this semester speaks to about "
+                f"{student:.0f}% of your followers. To reach more students you "
+                f"need posts that travel <i>out</i> of this audience, which is "
+                f"the share rate rather than likes. Alumni sharing a post to a "
+                f"student is how you reach the other group.")
         else:
             out.append(f"<b>Working:</b> {student:.0f}% of followers are 18 to 24, "
                        f"so the audience matches who you recruit.")
@@ -59,8 +66,10 @@ def audience_recommendations(af):
         share = sum(p for _, _, p in top3)
         names = ", ".join(s.split(",")[0] for s, _, _ in top3)
         out.append(f"<b>Where they are:</b> {names} account for {share:.0f}% of "
-                   f"followers with a known city. That is FIU's catchment, which "
-                   f"is what you want.")
+                   f"followers with a known city, which is FIU's catchment. "
+                   f"Local detail works here: naming a building, a bus route or "
+                   f"a nearby spot costs nothing and lands with the people who "
+                   f"can actually turn up.")
 
     country = parts.get("country")
     if country:
@@ -76,10 +85,15 @@ def audience_recommendations(af):
         if len(known) == 2:
             (a, ap), (b, bp) = known
             label = {"M": "men", "F": "women"}
+            unknown = next((p for s_, _, p in gender["segments"] if s_ == "U"), 0)
             if ap - bp >= 10:
-                out.append(f"<b>Split:</b> {ap:.0f}% {label[a]} against {bp:.0f}% "
-                           f"{label[b]}. Worth knowing when you pick who appears "
-                           f"in a post.")
+                out.append(f"<b>Split:</b> {ap:.0f}% {label[a]} against "
+                           f"{bp:.0f}% {label[b]}"
+                           + (f", with {unknown:.0f}% unreported"
+                              if unknown else "")
+                           + f". Not a strong enough signal to write content "
+                             f"around, but worth a look if you ever find one "
+                             f"group is not turning up to events.")
 
     out.append(f"<i>Instagram reports these for followers only, and a share are "
                f"unknown, so the percentages are indicative rather than exact. "
