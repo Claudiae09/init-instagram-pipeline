@@ -11,6 +11,8 @@ import datetime as dt
 import pandas as pd
 
 MIN_POSTS = 3          # below this a comparison is noise, not a signal
+MIN_ER_DELTA = 0.5     # percentage points; below this an engagement move is noise
+MIN_VOLUME_POSTS = 8   # don't prescribe from a handful of posts
 MIN_FMT_POSTS = 5      # minimum posts before we call a format a winner
 MAX_POST_CONCENTRATION = 0.45   # if one post is >45% of a format's shares, skip it
 FORMATS = ["IG carousel", "IG reel", "IG image"]
@@ -67,15 +69,23 @@ def compare_periods(m, days, label, prior_label):
     # handful of posts and one viral outlier will otherwise look like the winner:
     #   1. at least MIN_FMT_POSTS posts
     #   2. no single post may account for most of that format's shares
-    per_fmt = []
+    per_fmt, excluded = [], []
     for f, g in cur.groupby("post_type"):
-        if len(g) < MIN_FMT_POSTS:
-            continue
+        r, n = rate(g, "shares"), len(g)
         tot = g["shares"].sum()
-        if tot > 0 and g["shares"].max() / tot > MAX_POST_CONCENTRATION:
-            continue                      # one post is carrying it — not a pattern
-        per_fmt.append((f, rate(g, "shares"), len(g)))
+        conc = (g["shares"].max() / tot) if tot else 0
+        if n < MIN_FMT_POSTS:
+            excluded.append({"fmt": f, "rate": r, "n": n, "why": "posts"})
+            continue
+        if tot > 0 and conc > MAX_POST_CONCENTRATION:
+            excluded.append({"fmt": f, "rate": r, "n": n, "why": "concentration",
+                             "conc": conc})
+            continue
+        per_fmt.append((f, r, n))
     d["formats"] = sorted(per_fmt, key=lambda x: -x[1])
+    # A format the reader can see in its own tab must not silently vanish from
+    # the headline. Keep the ones that would look like they beat the leader.
+    d["excluded"] = sorted(excluded, key=lambda e: -e["rate"])
     return d
 
 
@@ -104,6 +114,17 @@ def period_recommendations(p):
             f"That is the format to make more of."
             + (f" {p['formats'][-1][0]}s trailed at {p['formats'][-1][1]:.1f}."
                if len(p["formats"]) > 1 else ""))
+        # Close the contradiction: if an excluded format scores higher than the
+        # named leader, the reader will find it one tab away.
+        beats = [e for e in p.get("excluded", []) if e["rate"] > top[1]]
+        if beats:
+            e = beats[0]
+            why = (f"on {e['n']} post{'s' if e['n'] != 1 else ''}"
+                   + (f" with one carrying {e['conc']:.0%} of them"
+                      if e.get("conc") else ""))
+            out.append(
+                f"{e['fmt']}s scored {e['rate']:.1f}, but {why}. Not enough to "
+                f"call, which is why they are not the recommendation.")
     # 3. reach
     if p["prev_enough"] and abs(p["reach_change"]) >= 15:
         up = p["reach_change"] > 0
@@ -112,7 +133,9 @@ def period_recommendations(p):
             f"{abs(p['reach_change']):.0f}%.</b> Median {p['reach_med']:,.0f} vs "
             f"{p['prev_reach_med']:,.0f} in {p['prior_label']}.")
     # 4. volume vs quality
-    if p["prev_enough"] and p["posts"] > p["prev_posts"] and p["er"] < p["prev_er"]:
+    if (p["prev_enough"] and p["posts"] > p["prev_posts"]
+            and (p["prev_er"] - p["er"]) >= MIN_ER_DELTA
+            and p["posts"] >= MIN_VOLUME_POSTS):
         out.append(
             f"<b>You posted more but engaged less.</b> {p['posts']} posts against "
             f"{p['prev_posts']}, yet engagement fell from {p['prev_er']:.1f}% to "

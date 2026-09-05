@@ -75,12 +75,33 @@ def hour_label(h):
 def decision_card(m):
     """The one thing at the top: recommendations, switchable by period."""
     tabs, panes = [], []
+    # Compare each period against the others first. A week can point one way
+    # and the month the other, and switching tabs then reads as the page
+    # contradicting itself unless we say which to trust.
+    comps = {k: R.compare_periods(m, d, l, pr) for k, l, d, pr in PERIODS}
     for i, (key, label, days, prior) in enumerate(PERIODS):
-        p = R.compare_periods(m, days, label, prior)
+        p = comps[key]
         recs = R.period_recommendations(p)
+        if key == "week":
+            mo = comps.get("month")
+            if (p.get("enough") and mo and mo.get("enough")
+                    and p.get("prev_enough") and mo.get("prev_enough")
+                    and p["share_change"] * mo["share_change"] < 0
+                    and abs(p["share_change"]) >= 10
+                    and abs(mo["share_change"]) >= 10):
+                up = mo["share_change"] > 0
+                recs.append(
+                    f"<i>Note the month reads the other way, "
+                    f"{'up' if up else 'down'} {abs(mo['share_change']):.0f}%. "
+                    f"A single week swings on one or two posts, so trust the "
+                    f"month for direction and use the week to spot what just "
+                    f"changed.</i>")
         active = " is-on" if i == 1 else ""          # default to Month
-        tabs.append(f'<button class="seg{active}" data-period="{key}" '
-                    f'role="tab" aria-selected="{str(i == 1).lower()}">{label}</button>')
+        sel = (i == 1)
+        tabs.append(f'<button class="seg{active}" data-period="{key}" id="t-{key}" '
+                    f'role="tab" aria-controls="p-{key}" '
+                    f'aria-selected="{str(sel).lower()}" '
+                    f'tabindex="{0 if sel else -1}">{label}</button>')
         span = ("this year so far" if days is None else f"the last {days} days")
         meta = (f"{p['posts']} posts in {span}"
                 if p.get("enough") else "not enough posts yet")
@@ -113,13 +134,15 @@ def decision_card(m):
                        + weak + "</details>")
 
         panes.append(
-            f'<div class="pane{active}" id="p-{key}" role="tabpanel">'
+            f'<div class="pane{active}" id="p-{key}" role="tabpanel" '
+            f'aria-labelledby="t-{key}" tabindex="0">'
             f'<p class="pane-meta">{meta}</p><ol>'
             + "".join(f"<li>{r}</li>" for r in recs) + "</ol>" + why + "</div>")
     return (
         '<section class="decision">'
         '<div class="decision-head"><h2>What to do next</h2>'
-        f'<div class="segs" role="tablist">{"".join(tabs)}</div></div>'
+        f'<div class="segs" role="tablist" aria-label="Time period">'
+        f'{"".join(tabs)}</div></div>'
         + "".join(panes) + "</section>")
 
 
@@ -133,8 +156,13 @@ def format_section(m):
 
     for j, (fmt, label) in enumerate(labels):
         on = " is-on" if j == 0 else ""
-        fmt_tabs.append(f'<button class="seg{on}" data-fmt="{j}" role="tab" '
-                        f'aria-selected="{str(j == 0).lower()}">{label}</button>')
+        # One format tab governs one pane per period, so aria-controls lists
+        # all three. Space separated ids are valid here.
+        controls = " ".join(f"f-{pk}-{j}" for pk, _, _, _ in PERIODS)
+        fmt_tabs.append(f'<button class="seg{on}" data-fmt="{j}" id="t-fmt-{j}" '
+                        f'role="tab" aria-controls="{controls}" '
+                        f'aria-selected="{str(j == 0).lower()}" '
+                        f'tabindex="{0 if j == 0 else -1}">{label}</button>')
 
         for pkey, plabel, days, _prior in PERIODS:
             show = " is-on" if (j == 0 and pkey == "month") else ""
@@ -159,7 +187,8 @@ def format_section(m):
                 if sf.get("truncated"):
                     what = "a full year" if days is None else f"a full {days} days"
                     panes.append(
-                        f'<div class="pane{show}" id="f-{pkey}-{j}" role="tabpanel">'
+                        f'<div class="pane{show}" id="f-{pkey}-{j}" role="tabpanel" '
+                        f'aria-labelledby="t-fmt-{j}" tabindex="0">'
                         f'<p class="banner"><b>Instagram\u2019s API cannot give us '
                         f'this history.</b> Stories are only retrievable while they '
                         f'are still live, so anything posted before daily collection '
@@ -189,7 +218,8 @@ def format_section(m):
                         + "".join(f"<li>{r}</li>" for r in R.story_recommendations(sf))
                         + "</ul>")
                 panes.append(f'<div class="pane{show}" id="f-{pkey}-{j}" '
-                             f'role="tabpanel">{body}</div>')
+                             f'role="tabpanel" aria-labelledby="t-fmt-{j}" '
+                             f'tabindex="0">{body}</div>')
                 continue
 
             w = R.format_in_window(m, fmt, days)
@@ -235,11 +265,13 @@ def format_section(m):
                        f'{prof["posts"]} {label.lower()}, too few in a single '
                        f'{"year" if days is None else "window"} to be reliable.</p>')
             panes.append(f'<div class="pane{show}" id="f-{pkey}-{j}" '
-                         f'role="tabpanel">{body}</div>')
+                         f'role="tabpanel" aria-labelledby="t-fmt-{j}" '
+                         f'tabindex="0">{body}</div>')
 
     return ('<section class="block"><h2>By format</h2>'
             '<p class="sub2">Follows the period you picked above.</p>'
-            f'<div class="segs" role="tablist">{"".join(fmt_tabs)}</div>'
+            f'<div class="segs" role="tablist" aria-label="Post format">'
+            f'{"".join(fmt_tabs)}</div>'
             + "".join(panes) + "</section>")
 
 
@@ -286,10 +318,11 @@ def topic_section(m):
                           'rate">\u2020</span>')
             star = marks
             cells.append(
-                f'<tr><td>{subject}</td><td>{r["posts"]}</td>'
-                f'<td>{r["rate"]:.1f}{star}</td>'
-                f'<td class="{"up" if r["vs_avg"] > 0 else "down"}">'
-                f'{r["vs_avg"]:+.0f}%</td><td>{r["recent"]}</td></tr>')
+                f'<tr><td>{subject}</td><td class="n">{r["posts"]}</td>'
+                f'<td class="n">{r["rate"]:.1f}{star}</td>'
+                f'<td class="n {"up" if r["vs_avg"] > 0 else "down"}">'
+                f'{r["vs_avg"]:+.0f}%</td>'
+                f'<td class="n">{r["recent"]}</td></tr>')
         rows = "".join(cells)
         notes = []
         if any(r.get("skewed") for r in tf["rows"]):
@@ -300,16 +333,16 @@ def topic_section(m):
             rows += (f'<tr><td colspan="5" class="foot">{" ".join(notes)} '
                      f'Marked subjects are shown but kept out of the advice '
                      f'above.</td></tr>')
-        # open by default: this table is the answer to "what should we post",
-        # and hiding it behind a click meant it went unnoticed
-        table = ('<details class="why-mini" open><summary><span class="chev">›</span> '
-                 'Every subject</summary>'
-                 f'<p class="sub2">Each subject links to a real example post. '
+        # Not a disclosure. Every other <details> on the page defaults closed,
+        # and this one defaulting open made the same component behave two ways.
+        # It is the answer to "what should we post", so it is just content.
+        table = (f'<p class="sub2">Each subject links to a real example post. '
                  f'Ranked on your {esc(tf.get("scope", ""))} posts.</p>'
                  '<div class="tw"><table class="topics">'
-                 '<thead><tr><th>Subject</th><th>Posts</th><th>Shares<br>per 1k</th>'
-                 '<th>vs your<br>average</th><th>Last<br>30 days</th></tr></thead>'
-                 f'<tbody>{rows}</tbody></table></div></details>')
+                 '<thead><tr><th>Subject</th><th class="n">Posts</th>'
+                 '<th class="n">Shares / 1k</th><th class="n">vs avg</th>'
+                 '<th class="n">Last 30d</th></tr></thead>'
+                 f'<tbody>{rows}</tbody></table></div>')
     return ('<section class="block"><h2>What to post next</h2>'
             '<p class="sub2">Ranked by what your own audience shares, since '
             'Instagram publishes nothing about what is trending.</p>'
@@ -346,114 +379,162 @@ def charts_section(m):
 
 CSS = """
 /* Light-only: the embedded Tableau views render white, so a dark page would
-   frame each one as a bright slab. */
-:root{color-scheme:light;--bg:#fff;--fg:#15181e;--muted:#5d6675;--card:#f7f8fa;
---line:#e5e8ef;--accent:#3d6bf5;--soft:#eef2fe;--soft-line:#d6e0fc;--good:#12855f}
+   frame each one as a bright slab.
+
+   Three decisions hold this sheet together:
+     1. Five type sizes, assigned by role. Not by feel.
+     2. Three surfaces, one per meaning: the answer, supporting detail, a
+        caveat. Colour stopped carrying hierarchy once elevation did.
+     3. Elevation is spent exactly once, on the primary card. */
+:root{
+  color-scheme:light;
+  --bg:#fff;--fg:#15181e;--muted:#5d6675;--card:#f7f8fa;
+  --line:#e5e8ef;--accent:#3d6bf5;--soft:#eef2fe;--soft-line:#d6e0fc;
+  --good:#12855f;--bad:#a4472e;
+  --warn-bg:#fff4e0;--warn-line:#efd3a3;--warn-bar:#d98c1f;--warn-fg:#6b4a12;
+
+  --fs-micro:12px;   /* chips, table headers, footnotes, eyebrows */
+  --fs-small:14px;   /* captions, notes, secondary lines          */
+  --fs-body:16px;    /* everything you actually read              */
+  --fs-lead:21px;    /* section headings, stat numbers            */
+  --fs-title:36px;   /* the h1                                    */
+
+  --r-sm:8px;        /* chips, notes, tables, media               */
+  --r-lg:14px;       /* the primary card                          */
+
+  --shadow:0 1px 2px rgba(17,21,28,.05), 0 8px 24px -12px rgba(17,21,28,.18);
+}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--fg);
-font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif}
+font:var(--fs-body)/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif}
 .wrap{max-width:820px;margin:0 auto;padding:clamp(28px,5vw,52px) clamp(16px,4vw,24px) 80px}
-h1{font-size:clamp(1.55rem,4.4vw,2.25rem);line-height:1.14;margin:0 0 6px;letter-spacing:-.02em}
-h2{font-size:clamp(1.1rem,2.6vw,1.35rem);margin:0;letter-spacing:-.01em}
-h3{font-size:.95rem;margin:26px 0 8px;color:var(--muted);font-weight:600}
-.sub{color:var(--muted);margin:0 0 30px;font-size:.93rem}
-.sub2{color:var(--muted);margin:6px 0 14px;font-size:.9rem}
 
-/* the one card that matters */
-.decision{background:var(--soft);border:1px solid var(--soft-line);border-radius:16px;
-padding:clamp(18px,3.5vw,26px);margin:0 0 34px}
+h1{font-size:clamp(25px,4.4vw,var(--fs-title));line-height:1.14;margin:0 0 6px;
+letter-spacing:-.02em}
+h2{font-size:var(--fs-lead);margin:0;letter-spacing:-.01em;line-height:1.25}
+h3{font-size:var(--fs-small);margin:26px 0 8px;color:var(--muted);font-weight:600}
+.sub{color:var(--muted);margin:0 0 30px;font-size:var(--fs-small)}
+.sub2{color:var(--muted);margin:6px 0 14px;font-size:var(--fs-small)}
+
+/* ── surface 1: the answer. The only raised thing on the page. ───────────── */
+.decision{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
+box-shadow:var(--shadow);padding:clamp(20px,3.5vw,28px);margin:0 0 34px}
 .decision-head{display:flex;flex-wrap:wrap;gap:12px;align-items:center;
-justify-content:space-between;margin-bottom:14px}
+justify-content:space-between;margin-bottom:16px}
 .decision ol{margin:0;padding-left:20px}
 .decision li{margin:0 0 12px}.decision li:last-child{margin:0}
-.pane-meta{color:var(--muted);font-size:.82rem;margin:0 0 12px}
+.pane-meta{color:var(--muted);font-size:var(--fs-micro);margin:0 0 12px}
 
-.segs{display:inline-flex;background:#fff;border:1px solid var(--soft-line);
-border-radius:10px;padding:3px;gap:2px}
-.seg{border:0;background:none;font:inherit;font-size:.85rem;font-weight:600;
-color:var(--muted);padding:6px 14px;border-radius:8px;cursor:pointer;
+/* ── surface 2: supporting detail. Flat, recessive, one look. ────────────── */
+.surface{background:var(--card);border:1px solid var(--line);
+border-radius:var(--r-sm)}
+.csays{background:var(--card);border:1px solid var(--line);
+border-radius:var(--r-sm);padding:12px 14px 12px 30px;margin:0 0 12px;
+font-size:var(--fs-small);line-height:1.55}
+.csays li{margin:0 0 6px}
+.csays li:last-child{margin:0}
+.cwhat{color:var(--muted);font-size:var(--fs-small);margin:0 0 6px;line-height:1.55}
+
+/* ── surface 3: a caveat. Amber, and it means one thing. ─────────────────── */
+.banner,.note{background:var(--warn-bg);border:1px solid var(--warn-line);
+border-left:4px solid var(--warn-bar);border-radius:var(--r-sm);
+color:var(--warn-fg);font-size:var(--fs-small);line-height:1.55}
+.banner{padding:12px 14px;margin:0 0 16px}
+.note{padding:10px 12px;margin:10px 0}
+.banner b{color:#5a3d0d}
+
+/* ── controls ───────────────────────────────────────────────────────────── */
+.segs{display:inline-flex;flex-wrap:wrap;background:var(--card);
+border:1px solid var(--line);border-radius:var(--r-sm);padding:3px;gap:2px}
+.seg{border:0;background:none;font:inherit;font-size:var(--fs-small);font-weight:600;
+color:var(--muted);padding:11px 14px;min-height:44px;
+border-radius:calc(var(--r-sm) - 2px);cursor:pointer;
 transition:background .15s ease,color .15s ease,transform .1s ease}
 .seg:hover{color:var(--fg)}
 .seg:active{transform:scale(.97)}
 .seg:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .seg.is-on{background:var(--accent);color:#fff}
 .pane{display:none}.pane.is-on{display:block}
+.pane:focus{outline:none}
 
 .block{margin:0 0 34px}
-.why-mini{margin:14px 0 0;border-top:1px solid var(--soft-line);padding-top:10px}
-.why-mini summary{cursor:pointer;list-style:none;font-weight:600;font-size:.9rem;
-color:var(--accent);display:flex;align-items:center;gap:6px;padding:4px 0}
-.why-mini summary::-webkit-details-marker{display:none}
-.why-mini[open] .chev{transform:rotate(90deg)}
-.why-mini .line{font-size:.92rem;margin:8px 0}
-ul.weak{margin:6px 0 4px;padding-left:20px;font-size:.9rem}
-ul.weak li{margin:0 0 6px}
-.dim{color:var(--muted);font-size:.85em}
-.note{background:#fff8e6;border:1px solid #f0e0b8;border-radius:8px;padding:9px 12px;
-margin:10px 0;font-size:.87rem;color:#6b5518}
-.build{opacity:.75;font-size:.92em}
-.allhist{color:var(--muted);font-size:.82rem;margin:10px 0 0;font-style:italic}
-.cwhat{color:var(--muted);font-size:.87rem;margin:0 0 6px;line-height:1.55}
-.csays{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);
-border-radius:8px;padding:11px 14px 11px 30px;margin:0 0 12px;font-size:.88rem;
-line-height:1.55}
-.csays li{margin:0 0 6px}
-.tw{overflow-x:auto}
-table.topics{border-collapse:collapse;width:100%;font-size:.85rem;margin:6px 0 0}
-table.topics th{text-align:left;font-weight:600;color:var(--muted);font-size:.76rem;
-padding:6px 10px 6px 0;border-bottom:1px solid var(--line);line-height:1.25}
-table.topics td{padding:7px 10px 7px 0;border-bottom:1px solid var(--line)}
-table.topics td:first-child{font-weight:500;min-width:190px}
-a.tlink{color:var(--accent);text-decoration:none;display:block}
-a.tlink:hover{text-decoration:underline}
-a.tlink .eg{display:block;color:var(--muted);font-weight:400;font-size:.78rem;
-line-height:1.35;margin-top:2px;text-decoration:none}
-table.topics .skew{color:var(--muted);font-weight:400}
-table.topics td.foot{color:var(--muted);font-size:.78rem;line-height:1.45;
-padding-top:9px;border-bottom:0}
-table.topics .up{color:var(--good);font-weight:600}
-table.topics .down{color:#a4472e;font-weight:600}
-.csays li:last-child{margin:0}
-.banner{background:#fff4e0;border:1px solid #efd3a3;border-left:4px solid #d98c1f;
-border-radius:8px;padding:12px 14px;margin:0 0 16px;font-size:.88rem;
-color:#6b4a12;line-height:1.55}
-.banner b{color:#5a3d0d}
-.diag,.fix{display:block;font-size:.87rem;margin-top:4px;line-height:1.5}
-.diag{color:var(--muted)}
-.fix{color:var(--good);font-weight:500}
-ul.weak li{margin:0 0 14px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;
-margin:14px 0 18px}
-.stats div{background:var(--card);border:1px solid var(--line);border-radius:10px;
-padding:12px 14px;font-size:.78rem;color:var(--muted);line-height:1.35}
-.stats span{display:block;font-size:1.32rem;font-weight:700;color:var(--fg);
-letter-spacing:-.02em;margin-bottom:2px}
 .line{margin:0 0 10px}
 .block ul{margin:4px 0 14px;padding-left:20px}
 .block li{margin:0 0 8px}
+.dim{color:var(--muted);font-size:var(--fs-micro)}
+.build{opacity:.75}
+.allhist{color:var(--muted);font-size:var(--fs-micro);margin:10px 0 0;font-style:italic}
 
-.why{border:1px solid var(--line);border-radius:12px;background:var(--card);
+/* ── disclosures. One component, one default: closed. ────────────────────── */
+.why-mini{margin:14px 0 0;border-top:1px solid var(--line);padding-top:10px}
+.why-mini summary{cursor:pointer;list-style:none;font-weight:600;
+font-size:var(--fs-small);color:var(--accent);display:flex;align-items:center;
+gap:6px;padding:8px 0;min-height:44px}
+.why-mini summary::-webkit-details-marker{display:none}
+.why-mini[open] .chev{transform:rotate(90deg)}
+.why-mini .line{font-size:var(--fs-small);margin:8px 0}
+.why{border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);
 padding:0 18px}
 .why summary{cursor:pointer;padding:16px 0;font-weight:600;list-style:none;
-display:flex;align-items:center;gap:8px}
+display:flex;align-items:center;gap:8px;min-height:44px}
 .why summary::-webkit-details-marker{display:none}
-.why summary em{color:var(--muted);font-style:normal;font-weight:400;font-size:.88rem}
+.why summary em{color:var(--muted);font-style:normal;font-weight:400;
+font-size:var(--fs-small)}
 .why[open] .chev{transform:rotate(90deg)}
-.chev{display:inline-block;color:var(--accent);font-size:1.2rem;line-height:1;
+.chev{display:inline-block;color:var(--accent);font-size:var(--fs-lead);line-height:1;
 transition:transform .18s ease}
-.viz{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;
-margin-bottom:6px}
-.viz iframe{width:100%;border:0;display:block}
 
-.explore{display:inline-block;margin:18px 0 22px;padding:11px 20px;border-radius:10px;
-background:var(--accent);color:#fff;text-decoration:none;font-size:.9rem;font-weight:600;
+/* ── weak-post diagnostics ──────────────────────────────────────────────── */
+ul.weak{margin:6px 0 4px;padding-left:20px;font-size:var(--fs-small)}
+ul.weak li{margin:0 0 14px}
+.diag,.fix{display:block;font-size:var(--fs-small);margin-top:4px;line-height:1.5}
+.diag{color:var(--muted)}
+.fix{color:var(--good);font-weight:500}
+
+/* ── stat tiles. The first figure is the argument; the rest are context. ─── */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;
+margin:14px 0 18px}
+.stats div{background:var(--card);border:1px solid var(--line);
+border-radius:var(--r-sm);padding:12px 14px;font-size:var(--fs-micro);
+color:var(--muted);line-height:1.35}
+.stats span{display:block;font-size:var(--fs-body);font-weight:700;color:var(--fg);
+letter-spacing:-.02em;margin-bottom:2px}
+.stats div:first-child span{font-size:var(--fs-lead)}
+
+/* ── the subject table ──────────────────────────────────────────────────── */
+.tw{overflow-x:auto}
+table.topics{border-collapse:collapse;width:100%;font-size:var(--fs-small);margin:6px 0 0}
+table.topics th{text-align:left;font-weight:600;color:var(--muted);
+font-size:var(--fs-micro);padding:6px 10px 6px 0;border-bottom:1px solid var(--line);
+line-height:1.25;white-space:nowrap}
+table.topics td{padding:8px 10px 8px 0;border-bottom:1px solid var(--line)}
+table.topics td:first-child{font-weight:500;min-width:190px}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;padding-right:0}
+table.topics .skew{color:var(--muted);font-weight:400}
+table.topics td.foot{color:var(--muted);font-size:var(--fs-micro);line-height:1.45;
+padding-top:9px;border-bottom:0;text-align:left}
+table.topics .up{color:var(--good);font-weight:600}
+table.topics .down{color:var(--bad);font-weight:600}
+a.tlink{color:var(--accent);text-decoration:none;display:block}
+a.tlink:hover{text-decoration:underline}
+a.tlink .eg{display:block;color:var(--muted);font-weight:400;
+font-size:var(--fs-micro);line-height:1.35;margin-top:2px;text-decoration:none}
+
+/* ── charts ─────────────────────────────────────────────────────────────── */
+.viz{border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;
+background:var(--bg);margin-bottom:6px}
+.viz iframe{width:100%;border:0;display:block}
+.explore{display:inline-block;margin:18px 0 22px;padding:13px 20px;
+border-radius:var(--r-sm);background:var(--accent);color:#fff;text-decoration:none;
+font-size:var(--fs-small);font-weight:600;min-height:44px;
 transition:filter .15s ease,transform .1s ease}
 .explore:hover{filter:brightness(1.07)}.explore:active{transform:scale(.97)}
 .explore:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
 a{color:var(--accent)}
 footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);
-color:var(--muted);font-size:.84rem}
+color:var(--muted);font-size:var(--fs-small)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media (max-width:520px){.decision-head{flex-direction:column;align-items:flex-start}}
 """
@@ -461,6 +542,10 @@ color:var(--muted);font-size:.84rem}
 JS = """
 // One period drives the whole page: the recommendations pane and the format
 // panes. Format choice is independent, so the visible pane is (period, format).
+//
+// The tabs declare role="tab", which is a promise that arrow keys work and that
+// only the selected tab is in the tab order. Both are implemented below; a
+// half-kept promise is worse for a screen reader than no roles at all.
 (function () {
   var state = { period: 'month', fmt: '0' };
 
@@ -473,17 +558,37 @@ JS = """
     });
   }
 
-  document.addEventListener('click', function (e) {
-    var btn = e.target.closest('.seg');
-    if (!btn) return;
+  function select(btn, focus) {
     var group = btn.parentElement;
     group.querySelectorAll('.seg').forEach(function (b) {
-      b.classList.toggle('is-on', b === btn);
-      b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+      var on = b === btn;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+      b.tabIndex = on ? 0 : -1;          // roving tabindex
     });
     if (btn.dataset.period) state.period = btn.dataset.period;
     if (btn.dataset.fmt) state.fmt = btn.dataset.fmt;
+    if (focus) btn.focus();
     apply();
+  }
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.seg');
+    if (btn) select(btn, false);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    var btn = e.target.closest('.seg');
+    if (!btn) return;
+    var keys = { ArrowLeft: -1, ArrowUp: -1, ArrowRight: 1, ArrowDown: 1 };
+    var segs = Array.prototype.slice.call(btn.parentElement.querySelectorAll('.seg'));
+    var i = segs.indexOf(btn), next = null;
+    if (e.key in keys) next = segs[(i + keys[e.key] + segs.length) % segs.length];
+    else if (e.key === 'Home') next = segs[0];
+    else if (e.key === 'End') next = segs[segs.length - 1];
+    if (!next) return;
+    e.preventDefault();
+    select(next, true);
   });
 
   apply();
