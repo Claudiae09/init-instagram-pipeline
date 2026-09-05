@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pandas as pd
 
+import chart_notes as CN
 import report_sections as R
 
 HERE = Path(__file__).resolve().parent
@@ -254,13 +255,21 @@ def stories_section():
             + "".join(f"<li>{r}</li>" for r in recs) + "</ul></section>")
 
 
-def charts_section():
+def charts_section(m):
     items = []
     for title, sheet in CHARTS:
         src = (f"https://public.tableau.com/views/{TABLEAU_WORKBOOK}/{sheet}"
                f"?:embed=y&:showVizHome=no&:toolbar=no&:tabs=no&:display_count=no")
+        # A chart without a reading is just decoration. Both lines are computed
+        # from the CSVs at build time, so they follow the data rather than
+        # describing what it looked like the day they were written.
+        note = CN.note_for(title, m)
+        blurb = ""
+        if note:
+            blurb = (f'<p class="cwhat">{note[0]}</p>'
+                     f'<p class="csays">{note[1]}</p>')
         items.append(
-            f'<h3>{esc(title)}</h3>'
+            f'<h3>{esc(title)}</h3>{blurb}'
             f'<div class="viz"><iframe src="{src}" height="520" loading="lazy" '
             f'title="{esc(title)}"></iframe></div>')
     return ('<section class="block"><details class="why">'
@@ -322,6 +331,9 @@ ul.weak li{margin:0 0 6px}
 .note{background:#fff8e6;border:1px solid #f0e0b8;border-radius:8px;padding:9px 12px;
 margin:10px 0;font-size:.87rem;color:#6b5518}
 .allhist{color:var(--muted);font-size:.82rem;margin:10px 0 0;font-style:italic}
+.cwhat{color:var(--muted);font-size:.87rem;margin:0 0 6px;line-height:1.55}
+.csays{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);
+border-radius:8px;padding:10px 13px;margin:0 0 12px;font-size:.88rem;line-height:1.6}
 .banner{background:#fff4e0;border:1px solid #efd3a3;border-left:4px solid #d98c1f;
 border-radius:8px;padding:12px 14px;margin:0 0 16px;font-size:.88rem;
 color:#6b4a12;line-height:1.55}
@@ -406,7 +418,7 @@ def build(m):
          f'latest post {newest:%b %d, %Y}</p>',
          decision_card(m),
          format_section(m),
-         charts_section(),
+         charts_section(m),
          f'<footer>Generated from the Instagram API. Data through '
          f'{newest:%B %d, %Y}; the page rebuilds itself every week.</footer>',
          "</div>"]
