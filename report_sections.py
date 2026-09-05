@@ -263,8 +263,9 @@ def story_findings(csv_dir, days=None):
     if not p.exists():
         return {"enough": False, "n": 0}
     s = _pd.read_csv(p)
-    for c in ["reach", "replies", "shares", "nav_tap_exit", "nav_tap_forward",
-              "nav_tap_back", "nav_swipe_forward"]:
+    for c in ["reach", "replies", "shares", "follows", "profile_visits",
+              "profile_activity", "total_interactions", "nav_tap_exit",
+              "nav_tap_forward", "nav_tap_back", "nav_swipe_forward"]:
         if c in s.columns:
             s[c] = _pd.to_numeric(s[c], errors="coerce").fillna(0)
     s = s[s.get("reach", 0) > 0]
@@ -287,6 +288,18 @@ def story_findings(csv_dir, days=None):
         "reach_med": s["reach"].median(),
         "completion": (1 - s["nav_tap_exit"].sum() / total_reach) * 100,
         "replies_per_1k": s["replies"].sum() / total_reach * 1000,
+        "shares": s["shares"].sum() if "shares" in s else 0,
+        "replies": s["replies"].sum() if "replies" in s else 0,
+        "follows": s["follows"].sum() if "follows" in s else 0,
+        "profile_visits": s["profile_visits"].sum() if "profile_visits" in s else 0,
+        "interactions": s["total_interactions"].sum() if "total_interactions" in s else 0,
+        # Instagram does not expose poll votes, quiz answers or question replies.
+        # total_interactions minus the parts we CAN see approximates likes and
+        # sticker taps — the closest available read on sticker engagement.
+        "passive": max(0, (s["total_interactions"].sum() if "total_interactions" in s else 0)
+                       - (s["replies"].sum() if "replies" in s else 0)
+                       - (s["shares"].sum() if "shares" in s else 0)),
+        "total_reach": total_reach,
         "by_type": [],
         "thin": len(s) < 40,        # flag that this is still an early read
     }
@@ -302,27 +315,39 @@ def story_findings(csv_dir, days=None):
 
 def story_recommendations(sf):
     if not sf.get("enough"):
-        return [f"Only {sf.get('n', 0)} stories captured so far. The daily job collects "
-                f"them from now on — check back in a few weeks."]
-    out = [f"<b>{sf['completion']:.0f}% of viewers watch your stories through</b> "
-           f"rather than tapping away, on a median reach of {sf['reach_med']:,.0f}. "
-           f"Anything above roughly 70% is healthy."]
+        return [f"Only {sf.get('n', 0)} stories captured in this window. The daily job "
+                f"collects them from now on — check back in a few weeks."]
+    out = [f"<b>{sf['completion']:.0f}% of viewers watch through</b> rather than tapping "
+           f"away, on a median reach of {sf['reach_med']:,.0f}. Above roughly 70% is healthy."]
+
     bt = sf["by_type"]
     if len(bt) >= 2 and (bt[0]["completion"] - bt[-1]["completion"]) >= 5:
         out.append(
             f"<b>{bt[0]['type']} stories hold attention better</b> — "
-            f"{bt[0]['completion']:.0f}% completion against {bt[-1]['completion']:.0f}% "
-            f"for {bt[-1]['type'].lower()}. Lead with {bt[0]['type'].lower()}s when the "
-            f"message matters.")
-    if sf["replies_per_1k"] < 0.5:
+            f"{bt[0]['completion']:.0f}% completion against {bt[-1]['completion']:.0f}% for "
+            f"{bt[-1]['type'].lower()}. Lead with {bt[0]['type'].lower()}s when it matters.")
+
+    # what kind of engagement is actually happening
+    if sf.get("interactions"):
         out.append(
-            "<b>Nobody is replying.</b> Across every story captured, replies are "
-            "essentially zero — which usually means there's nothing to reply <i>to</i>. "
-            "Add a poll, question box or quiz sticker; stories that ask for a tap are "
-            "the ones that start conversations and feed the algorithm.")
+            f"<b>Engagement is passive.</b> Of {sf['interactions']:.0f} interactions, "
+            f"about {sf['passive']:.0f} are likes or sticker taps, {sf['shares']:.0f} are "
+            f"shares and {sf['replies']:.0f} are replies. People react but don't respond — "
+            f"a poll or question sticker is what turns a tap into a conversation.")
+
+    # conversion: does any of this reach go anywhere?
+    if sf.get("total_reach"):
+        out.append(
+            f"<b>Stories aren't converting.</b> {sf['total_reach']:,.0f} people reached "
+            f"produced {sf['profile_visits']:.0f} profile visits and "
+            f"{sf['follows']:.0f} follows. If stories are meant to grow you, they need an "
+            f"explicit next step — a link sticker, or 'tap the profile to sign up'.")
+
+    out.append("<i>Instagram's API doesn't expose poll votes, quiz answers or question "
+               "replies — those live only in the app. The likes/sticker figure above is "
+               "derived from total interactions.</i>")
     if sf["thin"]:
-        out.append(f"<i>Early read — based on {sf['n']} stories. Treat as a direction, "
-                   f"not a conclusion; it firms up as the daily job collects more.</i>")
+        out.append(f"<i>Early read — {sf['n']} stories. Firms up as the daily job runs.</i>")
     return out
 
 

@@ -298,8 +298,13 @@ def pull_stories(uid: str):
                "media_type": s.get("media_type"), "permalink": s.get("permalink"),
                "timestamp": s.get("timestamp")}
         try:
+            # Everything the story endpoint actually supports (verified against
+            # the API). Sticker-level data — poll votes, quiz answers, question
+            # replies — is NOT exposed; total_interactions is the only signal
+            # that captures likes and sticker taps, so we derive those below.
             ins = api_get(f"{s['id']}/insights",
-                          {"metric": "reach,replies,shares,total_interactions,navigation"})
+                          {"metric": "reach,replies,shares,follows,profile_visits,"
+                                     "profile_activity,total_interactions,navigation"})
             for m in ins.get("data", []):
                 rec[m.get("name")] = metric_value(m)
         except Exception as e:
