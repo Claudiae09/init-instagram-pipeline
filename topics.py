@@ -28,15 +28,26 @@ TOPICS = {
     "Team and behind the scenes": r"\bour team\b|\be-?board\b|behind the scenes|board member",
 }
 
-MIN_TOPIC_POSTS = 8      # below this a topic's rate is noise
+# Instagram truncates a caption after roughly this much, and the opening line
+# is where a post states what it is about. Matching the whole caption tagged
+# registration posts as "partners" because the sponsor thank-you sits in the
+# boilerplate at the bottom.
+LEDE = 150
+
+# Two different bars, because showing a subject and trusting its rate are
+# different questions. A subject with 4 posts belongs in the table (hiding it
+# implies it does not exist) but must not drive a recommendation.
+SHOW_MIN  = 3            # appears in the table
+TRUST_MIN = 8            # allowed to lead the advice
 RECENT_DAYS = 30         # window used to spot a topic that has gone quiet
 MIN_YEAR_POSTS = 60      # below this, a single year is too thin to rank subjects
 
 
 def _tag(m):
     m = m[m["caption"].notna() & (m["reach"] > 0)].copy()
+    lede = m["caption"].astype(str).str[:LEDE]
     for name, pat in TOPICS.items():
-        m[name] = m["caption"].str.contains(pat, case=False, regex=True, na=False)
+        m[name] = lede.str.contains(pat, case=False, regex=True, na=False)
     # How many subjects each post matches. A post about everything is a poor
     # illustration of any one subject.
     m["_ntopics"] = m[list(TOPICS)].sum(axis=1)
@@ -86,7 +97,7 @@ def topic_findings(m, year=None):
     rows = []
     for name in TOPICS:
         g = t[t[name]]
-        if len(g) < MIN_TOPIC_POSTS or not g["reach"].sum():
+        if len(g) < SHOW_MIN or not g["reach"].sum():
             continue
         # Same outlier guard used elsewhere, but here it flags rather than
         # deletes: dropping a subject from the table entirely hides the fact
@@ -95,7 +106,7 @@ def topic_findings(m, year=None):
         skewed = bool(tot > 0
                       and g["shares"].max() / tot > R.MAX_POST_CONCENTRATION)
         rows.append({
-            "skewed": skewed,
+            "skewed": skewed, "thin": len(g) < TRUST_MIN,
             "topic": name, "posts": len(g),
             "rate": g["shares"].sum() / g["reach"].sum() * 1000,
             "recent": int(recent[name].sum()) if len(recent) else 0,
@@ -106,7 +117,7 @@ def topic_findings(m, year=None):
     for r in rows:
         r["vs_avg"] = R.pct_change(base, r["rate"])
     rows.sort(key=lambda r: -r["rate"])
-    solid = [r for r in rows if not r["skewed"]]
+    solid = [r for r in rows if not r["skewed"] and not r["thin"]]
     # What has been dominating the calendar lately, which is often not the same
     # thing as what performs. That gap is the most useful recommendation here.
     dominant = max(rows, key=lambda r: r["recent"]) if len(recent) else None
@@ -152,6 +163,14 @@ def topic_recommendations(tf):
         out.append(f"<b>Ease off:</b> {low['topic']}, at {low['rate']:.1f} "
                    f"against your {base:.1f} average. Worth posting, just not for "
                    f"growth.")
+
+    # When nothing stands out, say that rather than padding with a weak claim.
+    if len(out) == 1 and len(rows) > 1:
+        lo = rows[-1]
+        out.append(f"Your subjects sit close together this year, from "
+                   f"{top['rate']:.1f} down to {lo['rate']:.1f} per 1,000. "
+                   f"No single subject is running away with it, so format and "
+                   f"timing matter more than topic right now.")
 
     sc = tf.get("scope", "")
     where = f"your {sc} posts" if sc.isdigit() else "all your posts"

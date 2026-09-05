@@ -277,18 +277,29 @@ def topic_section(m):
                            + "</a>")
             else:
                 subject = name
-            star = ('<span class="skew" title="One post accounts for most of '
-                    "this subject's shares\">*</span>") if r.get("skewed") else ""
+            marks = ""
+            if r.get("skewed"):
+                marks += ('<span class="skew" title="One post accounts for most '
+                          "of this subject's shares\">*</span>")
+            if r.get("thin"):
+                marks += ('<span class="skew" title="Too few posts to trust the '
+                          'rate">\u2020</span>')
+            star = marks
             cells.append(
                 f'<tr><td>{subject}</td><td>{r["posts"]}</td>'
                 f'<td>{r["rate"]:.1f}{star}</td>'
                 f'<td class="{"up" if r["vs_avg"] > 0 else "down"}">'
                 f'{r["vs_avg"]:+.0f}%</td><td>{r["recent"]}</td></tr>')
         rows = "".join(cells)
+        notes = []
         if any(r.get("skewed") for r in tf["rows"]):
-            rows += ('<tr><td colspan="5" class="foot">* One post accounts for '
-                     'most of this subject\'s shares, so the rate is not '
-                     'reliable yet. Left out of the advice above.</td></tr>')
+            notes.append("* One post accounts for most of this subject's shares.")
+        if any(r.get("thin") for r in tf["rows"]):
+            notes.append("\u2020 Fewer than 8 posts, so the rate is not settled.")
+        if notes:
+            rows += (f'<tr><td colspan="5" class="foot">{" ".join(notes)} '
+                     f'Marked subjects are shown but kept out of the advice '
+                     f'above.</td></tr>')
         # open by default: this table is the answer to "what should we post",
         # and hiding it behind a click meant it went unnoticed
         table = ('<details class="why-mini" open><summary><span class="chev">›</span> '
