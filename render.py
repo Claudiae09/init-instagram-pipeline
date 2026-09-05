@@ -98,7 +98,8 @@ def video_section(m):
         f'<td class="n">{r["reach"]:,.0f}</td>'
         f'<td class="n down">{r["vs_median"]:+.1f}s</td></tr>'
         for r in vf["rows"])
-    return ('<section class="block panel"><h2>Reels people leave soonest</h2>'
+    return ('<section class="block panel wide">'
+            '<h2>Reels people leave soonest</h2>'
             f'<p class="sub2">Ranked by how long the average viewer stayed. '
             f'{vf["year"]} reels only. Each links to the reel.</p>'
             '<ul class="csays">'
@@ -250,7 +251,11 @@ def period_bar():
             f'<div class="segs" role="tablist" aria-label="Time period">'
             f'<span class="segpill" aria-hidden="true"></span>{"".join(tabs)}</div>'
             '<span class="thint">Changes every section below</span>'
-            '</div></div>')
+            # The control is reachable from anywhere on a 4,800px page, but its
+            # effect is usually off-screen. Carrying the headline number makes
+            # it visibly do something wherever you are.
+            '<span class="tlive" id="tlive" aria-live="polite"></span>'
+            '</div></div></div>')
 
 
 def kpi_strip(m, days, label):
@@ -488,7 +493,7 @@ def format_section(m):
 
     return ('<section class="block panel"><h2>By content type</h2>'
             '<p class="sub2">Follows the period you picked above.</p>'
-            f'<div class="segs" role="tablist" aria-label="Content type">'
+            f'<div class="segs segs-quiet" role="tablist" aria-label="Content type">'
             f'<span class="segpill" aria-hidden="true"></span>'
             f'{"".join(fmt_tabs)}</div>'
             + f'<div class="stage" data-stage="f">{"".join(panes)}</div>'
@@ -724,11 +729,14 @@ CSS = """
   --good:#12855f;--bad:#a4472e;
   --warn-bg:#fff4e0;--warn-line:#efd3a3;--warn-bar:#d98c1f;--warn-fg:#6b4a12;
 
-  --fs-micro:12px;   /* chips, table headers, footnotes, eyebrows */
-  --fs-small:14px;   /* captions, notes, secondary lines          */
-  --fs-body:16px;    /* everything you actually read              */
-  --fs-lead:21px;    /* section headings, stat numbers            */
-  --fs-title:36px;   /* the h1                                    */
+  /* rem, not px: absolute sizes ignore a reader who has set a larger default
+     font size in their browser. Padding is already on clamp(), so the layout
+     follows the text rather than breaking against it. */
+  --fs-micro:.75rem;    /* 12 · chips, table headers, footnotes    */
+  --fs-small:.875rem;   /* 14 · captions, notes, secondary lines   */
+  --fs-body:1rem;       /* 16 · everything you actually read       */
+  --fs-lead:1.3125rem;  /* 21 · section headings, stat numbers     */
+  --fs-title:2.25rem;   /* 36 · the h1                             */
 
   --track-title:-.022em; --lead-title:1.08;   /* 36px */
   --track-lead:-.012em;  --lead-lead:1.24;    /* 21px */
@@ -743,6 +751,10 @@ CSS = """
   --chrome-bg:rgba(252,253,255,.72);
   --chrome-line:#e2e7f0;
   --well:#fff;--well-line:#e5e8ef;
+  /* Interactive edges need their own token: --line is for decorative rules and
+     is too faint to bound a control, measuring 1.23:1. Non-text UI boundaries
+     want 3:1, and these are measured against both --bg and --card. */
+  --line-control:#868fa1;   /* 3.25:1 on white, 3.06:1 on --card */
   --on-accent:#fff;          /* text sitting on the accent fill */
 }
 /* One block, because the palette is fully tokenised. Nothing below this
@@ -758,6 +770,7 @@ CSS = """
     --shadow:0 1px 2px rgba(0,0,0,.4), 0 16px 40px -24px rgba(0,0,0,.85);
     /* The well the Tableau embeds sit in. */
     --well:#f7f8fa;--well-line:#3a4250;
+    --line-control:#626c80;   /* 3.46:1 on --bg, 3.20:1 on --card */
     /* The dark accent is light, so white on it would not carry. */
     --on-accent:#0f1626;
   }
@@ -775,13 +788,20 @@ CSS = """
 
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;
-/* The sticky bar is ~77px, so anything scrolled to would tuck underneath it. */
-scroll-padding-top:92px}
+/* Driven from the bar's measured height, published as --chrome-h by a
+   ResizeObserver. A hard-coded value was wrong the moment the bar wrapped. */
+scroll-padding-top:calc(var(--chrome-h, 77px) + 16px)}
 body{margin:0;background:var(--bg);color:var(--fg);
 font:var(--fs-body)/var(--lead-body) system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif}
-.wrap{max-width:1120px;margin:0 auto;padding:clamp(28px,5vw,52px) clamp(16px,4vw,24px) 80px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 clamp(16px,4vw,24px) 80px}
+.bleed{max-width:1120px;margin:0 auto;padding:0 clamp(16px,4vw,24px)}
+.pagehead{padding:clamp(28px,5vw,52px) 0 18px}
+.skip{position:absolute;left:-9999px;top:0;z-index:60;background:var(--accent);
+color:var(--on-accent);padding:12px 18px;border-radius:0 0 var(--r-sm) 0;
+font-weight:600;text-decoration:none}
+.skip:focus{left:0}
 
-h1{font-size:clamp(29px,4.4vw,var(--fs-title));line-height:var(--lead-title);
+h1{font-size:clamp(1.8125rem,4.4vw,var(--fs-title));line-height:var(--lead-title);
 margin:0 0 6px;letter-spacing:var(--track-title);font-optical-sizing:auto;
 text-wrap:balance}
 h2{font-size:var(--fs-lead);margin:0;letter-spacing:-.01em;line-height:1.25}
@@ -790,7 +810,7 @@ h3{font-size:var(--fs-small);margin:26px 0 8px;color:var(--muted);font-weight:60
 .sub2{color:var(--muted);margin:6px 0 14px;font-size:var(--fs-small)}
 
 /* ── the one page-level control ─────────────────────────────────────────── */
-.chrome{position:sticky;top:0;z-index:40;margin:0 0 18px;
+.chrome{position:sticky;top:0;z-index:40;margin:0 0 22px;
 background:var(--chrome-bg);
 -webkit-backdrop-filter:blur(22px) saturate(180%);
 backdrop-filter:blur(22px) saturate(180%);
@@ -810,7 +830,9 @@ padding:12px 0}
   .chrome{background:var(--bg);backdrop-filter:none}
 }
 .tlabel{font-size:var(--fs-micro);font-weight:600;color:var(--muted);
-text-transform:uppercase;letter-spacing:.02em}
+text-transform:uppercase;letter-spacing:var(--track-caps)}
+.tlive{font-size:var(--fs-small);color:var(--fg);font-weight:600;
+font-variant-numeric:tabular-nums;margin-left:auto}
 .thint{font-size:var(--fs-micro);color:var(--muted)}
 
 /* ── dashboard layout ───────────────────────────────────────────────────── */
@@ -833,8 +855,13 @@ line-height:var(--lead-lead)}
 
 /* Two columns on a real screen, stacked on a phone. The point of a dashboard
    is seeing more than one thing at once. */
+/* Content sets the height. `stretch` forced the shorter panel of each pair up
+   to its neighbour, which reads as content that failed to load rather than as
+   breathing room. */
 .grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);
-gap:20px;align-items:stretch;margin:0 0 22px}
+gap:20px;align-items:start;margin:0 0 22px}
+/* A four-column table does not belong in 55% of the page. */
+.grid > .wide{grid-column:1 / -1}
 .grid > *{margin:0}
 .panel{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
 padding:clamp(18px,2.5vw,24px)}
@@ -868,13 +895,21 @@ color:var(--warn-fg);font-size:var(--fs-small);line-height:1.55}
 
 /* ── controls ───────────────────────────────────────────────────────────── */
 .segs{position:relative;display:inline-flex;background:var(--card);
-border:1px solid var(--line);border-radius:var(--r-sm);padding:3px;gap:2px;
+border:1px solid var(--line-control);border-radius:var(--r-sm);padding:3px;gap:2px;
 touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .segpill{position:absolute;top:3px;left:0;height:calc(100% - 6px);
 border-radius:calc(var(--r-sm) - 2px);background:var(--accent);
 pointer-events:none;opacity:0;will-change:transform,width}
 .segs.ready .segpill{opacity:1}
 .segs.dragging{cursor:grabbing}
+
+/* The local control drives one panel; the sticky one drives the page. Same
+   engine, quieter form, so identical shape stops implying identical reach. */
+.segs-quiet{background:none;border:0;padding:0 0 6px;gap:10px;border-radius:0}
+.segs-quiet .segpill{top:auto;bottom:0;height:2px;border-radius:2px}
+.segs-quiet .seg{padding:11px 2px;color:var(--muted)}
+.segs-quiet .seg.is-on{color:var(--fg);background:none}
+.segs-quiet .seg:hover{color:var(--fg)}
 /* The pill is absolutely positioned, so it paints above static siblings
    whatever the source order. The labels have to be lifted over it. */
 .seg{position:relative;z-index:1;
@@ -925,6 +960,10 @@ font-size:var(--fs-small)}
 .chev{display:inline-block;color:var(--accent);font-size:var(--fs-lead);line-height:1;
 transition:transform .28s cubic-bezier(.32,.72,0,1)}
 .d-body{overflow:hidden}
+summary:active{background:var(--card);border-radius:var(--r-sm)}
+summary:active .chev{transform:scale(.9)}
+tr.crow:active td,table.topics tbody tr:active td{background:var(--soft)}
+a.tlink{padding:2px 0}
 details.is-open > summary .chev{transform:rotate(90deg)}
 
 /* ── weak-post diagnostics ──────────────────────────────────────────────── */
@@ -1012,8 +1051,8 @@ letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .bar{display:grid;grid-template-columns:minmax(56px,auto) 1fr 52px;align-items:center;gap:10px;
 margin:0 0 6px;font-size:var(--fs-micro);color:var(--muted)}
 .bl{font-variant-numeric:tabular-nums}
-.bt{background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);
-height:14px;overflow:hidden}
+.bt{background:var(--card);border:1px solid var(--line-control);
+border-radius:var(--r-sm);height:14px;overflow:hidden}
 .bt i{display:block;height:100%;background:var(--accent);opacity:.85}
 .bar.me .bl,.bar.me .bv{color:var(--fg);font-weight:700}
 .bar.me .bt i{opacity:1}
@@ -1047,7 +1086,7 @@ footer p{margin:0}
 .sig{font-size:var(--fs-body);color:var(--fg);letter-spacing:var(--track-body)}
 .sig b{font-weight:600}
 .fmeta{margin-top:6px!important;font-size:var(--fs-small)}
-.build{margin-top:10px!important;font-size:var(--fs-micro);opacity:.7;
+.build{margin-top:10px!important;font-size:var(--fs-micro);
 font-variant-numeric:tabular-nums}
 /* Reduced motion means no vestibular motion: travel, parallax, large
    surfaces sliding. Colour and opacity feedback are comprehension aids and
@@ -1171,6 +1210,27 @@ JS = """
 
   var state = { period: 'month', fmt: '0' };
 
+  // The headline figure for each period, read out of the KPI panes that are
+  // already on the page rather than duplicated into JS.
+  var live = document.getElementById('tlive');
+  function headline(period) {
+    var pane = document.getElementById('k-' + period);
+    if (!pane) return '';
+    var tiles = pane.querySelectorAll('.kpi');
+    var bits = [];
+    for (var i = 0; i < tiles.length && bits.length < 2; i++) {
+      var label = tiles[i].querySelector('.kl'), val = tiles[i].querySelector('.kv');
+      if (label && val) bits.push(val.textContent + ' ' + label.textContent.toLowerCase());
+    }
+    return bits.join(' · ');
+  }
+  function announce() {
+    if (!live) return;
+    var btn = document.querySelector('.seg[data-period="' + state.period + '"]');
+    var name = btn ? btn.textContent : state.period;
+    live.textContent = name + ' · ' + headline(state.period);
+  }
+
   // ── stages: animate height so the column below does not jolt ──────────
   function Stage(el) {
     var self = this;
@@ -1234,6 +1294,7 @@ JS = """
                               : st.key + '-' + state.period;
       st.to(id, dir);
     });
+    announce();
   }
 
   // ── the pill: one object that travels, and that you can grab ──────────
@@ -1427,6 +1488,14 @@ JS = """
     }
   }
 
+  // ── publish the bar height, so scroll-padding is never a guess ─────────
+  if (chrome && window.ResizeObserver) {
+    new ResizeObserver(function () {
+      document.documentElement.style.setProperty(
+        '--chrome-h', Math.round(chrome.getBoundingClientRect().height) + 'px');
+    }).observe(chrome);
+  }
+
   // ── tables: fade the overflowing edge, and lift it at the end ───────────
   [].slice.call(document.querySelectorAll('.tw')).forEach(function (tw) {
     var upd = function () {
@@ -1483,11 +1552,16 @@ JS = """
 
 def build(m):
     newest = m["d"].max().date()
-    P = ['<div class="wrap">',
+    P = ['<a class="skip" href="#main">Skip to the dashboard</a>',
+         '<header class="pagehead"><div class="bleed">',
          "<h1>INIT FIU · Instagram</h1>",
          f'<p class="sub">Updated automatically · {len(m):,} posts analysed · '
          f'latest post {newest:%b %d, %Y}</p>',
+         "</div></header>",
+         # The bar sits outside the wrapper so the material reaches both edges.
+         # Inside it, the same max-width as the content keeps them aligned.
          period_bar(),
+         '<main id="main" class="wrap">',
          kpi_panes(m),
          guidance_card(m),
          format_section(m),
@@ -1496,11 +1570,11 @@ def build(m):
          # where a shadow was only saying it tonally.
          decision_card(m),
          '<div class="grid">',
-         topic_section(m),
-         audience_section("growth"),
-         audience_section("who"),
-         competitor_section(m),
-         video_section(m),
+         topic_section(m),          # tall
+         audience_section("growth"),  # short, pairs with it
+         audience_section("who"),   # tall
+         competitor_section(m),     # medium, pairs with it
+         video_section(m),          # four columns, full width on its own row
          "</div>",
          charts_section(m),
          # The build stamp stays, quietly. Without it a stale deploy is
@@ -1510,9 +1584,12 @@ def build(m):
          f'{newest:%B %-d, %Y} · updates itself every week</p>'
          f'<p class="build">Page built '
          f'{dt.datetime.now():%-d %b %Y, %H:%M}</p></footer>',
-         "</div>"]
+         "</main>"]
     return ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
+            '<meta name="description" content="What INIT FIU should post next, '
+            'from its own Instagram data: what changed, which subjects earn '
+            'shares, when to post and how the account compares.">'
             "<title>INIT FIU · Instagram</title>"
             f"<style>{CSS}</style></head><body>"
             + "".join(P)
