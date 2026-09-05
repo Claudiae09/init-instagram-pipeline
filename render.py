@@ -82,7 +82,7 @@ def kpi_panes(m):
         on = " is-on" if i == 1 else ""
         out.append(f'<div class="pane{on}" id="k-{key}" role="tabpanel" '
                    f'aria-labelledby="t-{key}">{kpi_strip(m, days, label)}</div>')
-    return "".join(out)
+    return f'<div class="stage" data-stage="k">{"".join(out)}</div>'
 
 
 def competitor_section(m):
@@ -187,10 +187,12 @@ def period_bar():
                     f'aria-controls="k-{key} p-{key} g-{key}" '
                     f'aria-selected="{str(sel).lower()}" '
                     f'tabindex="{0 if sel else -1}">{label}</button>')
-    return ('<div class="toolbar"><span class="tlabel">Showing</span>'
+    return ('<div class="chrome"><div class="toolbar">'
+            '<span class="tlabel">Showing</span>'
             f'<div class="segs" role="tablist" aria-label="Time period">'
-            f'{"".join(tabs)}</div>'
-            '<span class="thint">Changes every section below</span></div>')
+            f'<span class="segpill" aria-hidden="true"></span>{"".join(tabs)}</div>'
+            '<span class="thint">Changes every section below</span>'
+            '</div></div>')
 
 
 def kpi_strip(m, days, label):
@@ -297,7 +299,8 @@ def decision_card(m):
         '<div class="decision-head"><h2>What changed</h2></div>'
         + '<p class="sub2 head-sub">How this period compares with the one '
           'before it, and why.</p>'
-        + "".join(panes) + "</section>")
+        + f'<div class="stage" data-stage="p">{"".join(panes)}</div>'
+        + "</section>")
 
 
 def format_section(m):
@@ -428,10 +431,10 @@ def format_section(m):
     return ('<section class="block panel"><h2>By content type</h2>'
             '<p class="sub2">Follows the period you picked above.</p>'
             f'<div class="segs" role="tablist" aria-label="Content type">'
+            f'<span class="segpill" aria-hidden="true"></span>'
             f'{"".join(fmt_tabs)}</div>'
-            + '<p class="sub2 head-sub">How this period compares with the one '
-          'before it, and why.</p>'
-        + "".join(panes) + "</section>")
+            + f'<div class="stage" data-stage="f">{"".join(panes)}</div>'
+            + "</section>")
 
 
 def stories_section():
@@ -593,8 +596,10 @@ def audience_section(part):
             for seg, _, pct in sorted(age["segments"],
                                       key=lambda x: x[0]))
         bars = f'<div class="bars">{rows}</div>'
-    growth = "".join(_growth_pane(i, k, d)
-                     for i, (k, _l, d, _p) in enumerate(PERIODS))
+    growth = ('<div class="stage" data-stage="g">'
+              + "".join(_growth_pane(i, k, d)
+                        for i, (k, _l, d, _p) in enumerate(PERIODS))
+              + '</div>')
 
     if part == "growth":
         return ('<section class="block panel"><h2>Followers</h2>'
@@ -622,10 +627,15 @@ def charts_section(m):
             what, bullets = note
             blurb = (f'<p class="cwhat">{what}</p><ul class="csays">'
                      + "".join(f"<li>{b}</li>" for b in bullets) + "</ul>")
+        # Height reserved up front so nothing below moves, and a titled card
+        # underneath that doubles as a fallback if Tableau never paints.
         items.append(
             f'<h3>{esc(title)}</h3>{blurb}'
-            f'<div class="viz"><iframe src="{src}" height="520" loading="lazy" '
-            f'title="{esc(title)}"></iframe></div>')
+            f'<div class="viz" data-src="{src}" data-title="{esc(title)}">'
+            f'<div class="viz-fb"><span class="vt">{esc(title)}</span>'
+            f'<span class="vs">Loading the chart…</span>'
+            f'<a href="{TABLEAU_HOME}" target="_blank" rel="noopener">'
+            f'Open in Tableau</a></div></div>')
     return ('<section class="block"><details class="why">'
             '<summary><span class="chev">›</span> See the data behind these '
             'recommendations <em>(9 charts)</em></summary>'
@@ -658,27 +668,53 @@ CSS = """
   --fs-lead:21px;    /* section headings, stat numbers            */
   --fs-title:36px;   /* the h1                                    */
 
+  --track-title:-.022em; --lead-title:1.08;   /* 36px */
+  --track-lead:-.012em;  --lead-lead:1.24;    /* 21px */
+  --track-body:0em;      --lead-body:1.6;     /* 16px */
+  --track-micro:.005em;                       /* 12-14px */
+  --track-caps:.055em;                        /* 12px UPPERCASE */
+
   --r-sm:8px;        /* chips, notes, tables, media               */
   --r-lg:14px;       /* the primary card                          */
 
   --shadow:0 1px 2px rgba(17,21,28,.05), 0 8px 24px -12px rgba(17,21,28,.18);
+  --chrome-bg:rgba(252,253,255,.72);
+  --chrome-line:#e2e7f0;
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--fg);
-font:var(--fs-body)/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif}
+font:var(--fs-body)/var(--lead-body) system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif}
 .wrap{max-width:1120px;margin:0 auto;padding:clamp(28px,5vw,52px) clamp(16px,4vw,24px) 80px}
 
-h1{font-size:clamp(29px,4.4vw,var(--fs-title));line-height:1.14;margin:0 0 6px;
-letter-spacing:-.02em}
+h1{font-size:clamp(29px,4.4vw,var(--fs-title));line-height:var(--lead-title);
+margin:0 0 6px;letter-spacing:var(--track-title);font-optical-sizing:auto;
+text-wrap:balance}
 h2{font-size:var(--fs-lead);margin:0;letter-spacing:-.01em;line-height:1.25}
 h3{font-size:var(--fs-small);margin:26px 0 8px;color:var(--muted);font-weight:600}
 .sub{color:var(--muted);margin:0 0 30px;font-size:var(--fs-small)}
 .sub2{color:var(--muted);margin:6px 0 14px;font-size:var(--fs-small)}
 
 /* ── the one page-level control ─────────────────────────────────────────── */
+.chrome{position:sticky;top:0;z-index:40;margin:0 0 18px;
+background:var(--chrome-bg);
+-webkit-backdrop-filter:blur(22px) saturate(180%);
+backdrop-filter:blur(22px) saturate(180%);
+border-bottom:1px solid var(--chrome-line);
+box-shadow:inset 0 1px 0 rgba(255,255,255,.65);
+transition:box-shadow .2s ease,border-color .2s ease}
+/* Scroll edge effect: no rule until content is actually passing underneath. */
+.chrome:not(.is-stuck){border-bottom-color:transparent;box-shadow:none}
+.chrome-sentinel{height:1px;margin-bottom:-1px}
 .toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-margin:0 0 18px;padding:0 0 16px;border-bottom:1px solid var(--line)}
+padding:12px 0}
+@media (prefers-reduced-transparency:reduce){
+  .chrome{background:var(--bg);-webkit-backdrop-filter:none;backdrop-filter:none}
+}
+@media (prefers-contrast:more){
+  :root{--line:#8b93a3;--chrome-line:#8b93a3}
+  .chrome{background:var(--bg);backdrop-filter:none}
+}
 .tlabel{font-size:var(--fs-micro);font-weight:600;color:var(--muted);
 text-transform:uppercase;letter-spacing:.02em}
 .thint{font-size:var(--fs-micro);color:var(--muted)}
@@ -687,13 +723,16 @@ text-transform:uppercase;letter-spacing:.02em}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
 gap:12px;margin:0 0 22px}
 .kpis-3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin:14px 0 16px}
-.kvs{font-size:var(--fs-lead)}
 .kpi{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
 padding:16px 18px;display:flex;flex-direction:column;gap:2px}
 .kl{font-size:var(--fs-micro);color:var(--muted);font-weight:600;
-letter-spacing:.02em;text-transform:uppercase}
+letter-spacing:var(--track-caps);text-transform:uppercase}
 .kv{font-size:var(--fs-title);font-weight:700;letter-spacing:-.03em;line-height:1.05;
 font-variant-numeric:tabular-nums}
+/* Must follow .kv: equal specificity, so source order decides. Declared
+   before it, this lost, and 21px kept 36px's tracking and leading. */
+.kvs{font-size:var(--fs-lead);letter-spacing:var(--track-lead);
+line-height:var(--lead-lead)}
 .kd{font-size:var(--fs-micro);color:var(--muted)}
 .kd.up{color:var(--good);font-weight:600}
 .kd.down{color:var(--bad);font-weight:600}
@@ -734,8 +773,14 @@ color:var(--warn-fg);font-size:var(--fs-small);line-height:1.55}
 .banner b{color:#5a3d0d}
 
 /* ── controls ───────────────────────────────────────────────────────────── */
-.segs{display:inline-flex;flex-wrap:wrap;background:var(--card);
-border:1px solid var(--line);border-radius:var(--r-sm);padding:3px;gap:2px}
+.segs{position:relative;display:inline-flex;background:var(--card);
+border:1px solid var(--line);border-radius:var(--r-sm);padding:3px;gap:2px;
+touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.segpill{position:absolute;top:3px;left:0;height:calc(100% - 6px);
+border-radius:calc(var(--r-sm) - 2px);background:var(--accent);
+pointer-events:none;opacity:0;will-change:transform,width}
+.segs.ready .segpill{opacity:1}
+.segs.dragging{cursor:grabbing}
 .seg{border:0;background:none;font:inherit;font-size:var(--fs-small);font-weight:600;
 color:var(--muted);padding:11px 14px;min-height:44px;
 border-radius:calc(var(--r-sm) - 2px);cursor:pointer;
@@ -745,8 +790,16 @@ transition:background .15s ease,color .15s ease,transform .1s ease}
 .seg:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);
 outline-offset:3px;border-radius:4px}
-.seg.is-on{background:var(--accent);color:#fff}
-.pane{display:none}.pane.is-on{display:block}
+/* The pill is the selection now, so the button only changes colour. */
+.seg.is-on{color:#fff}
+
+/* A stage owns its height so the column below it does not jolt on a switch. */
+.stage{position:relative}
+.stage.is-moving{overflow:hidden;will-change:height}
+.pane{display:none}
+.pane.is-on{display:block}
+.stage.is-moving .pane.is-out{display:block;position:absolute;inset:0 0 auto 0;
+pointer-events:none}
 .pane:focus{outline:none}
 
 .block{margin:0 0 34px}
@@ -763,7 +816,7 @@ outline-offset:3px;border-radius:4px}
 font-size:var(--fs-small);color:var(--accent);display:flex;align-items:center;
 gap:6px;padding:8px 0;min-height:44px}
 .why-mini summary::-webkit-details-marker{display:none}
-.why-mini[open] .chev{transform:rotate(90deg)}
+
 .why-mini .line{font-size:var(--fs-small);margin:8px 0}
 .why{border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);
 padding:0 18px}
@@ -772,9 +825,11 @@ display:flex;align-items:center;gap:8px;min-height:44px}
 .why summary::-webkit-details-marker{display:none}
 .why summary em{color:var(--muted);font-style:normal;font-weight:400;
 font-size:var(--fs-small)}
-.why[open] .chev{transform:rotate(90deg)}
+
 .chev{display:inline-block;color:var(--accent);font-size:var(--fs-lead);line-height:1;
-transition:transform .18s ease}
+transition:transform .28s cubic-bezier(.32,.72,0,1)}
+.d-body{overflow:hidden}
+details.is-open > summary .chev{transform:rotate(90deg)}
 
 /* ── weak-post diagnostics ──────────────────────────────────────────────── */
 ul.weak{margin:6px 0 4px;padding-left:20px;font-size:var(--fs-small)}
@@ -797,13 +852,16 @@ letter-spacing:-.02em;margin-bottom:2px;font-variant-numeric:tabular-nums}
 .best{background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);
 padding:12px 14px;margin:0 0 14px}
 .bk{display:block;font-size:var(--fs-micro);font-weight:600;color:var(--muted);
-text-transform:uppercase;letter-spacing:.02em;margin-bottom:4px}
+text-transform:uppercase;letter-spacing:var(--track-caps);margin-bottom:4px}
 .best .tlink{font-size:var(--fs-small)}
 .bm{display:block;font-size:var(--fs-micro);color:var(--muted);margin-top:4px;
 font-variant-numeric:tabular-nums}
 
 /* ── the subject table ──────────────────────────────────────────────────── */
-.tw{overflow-x:auto}
+.tw{overflow-x:auto;
+-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent);
+mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent)}
+.tw.at-end,.tw.no-overflow{-webkit-mask-image:none;mask-image:none}
 table.topics{border-collapse:collapse;width:100%;font-size:var(--fs-small);margin:6px 0 0}
 table.topics th{text-align:left;font-weight:600;color:var(--muted);
 font-size:var(--fs-micro);padding:6px 10px 6px 0;border-bottom:1px solid var(--line);
@@ -867,9 +925,18 @@ height:14px;overflow:hidden}
 .bv{text-align:right;font-variant-numeric:tabular-nums;color:var(--fg);font-weight:600}
 
 /* ── charts ─────────────────────────────────────────────────────────────── */
-.viz{border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;
-background:var(--bg);margin-bottom:6px}
-.viz iframe{width:100%;border:0;display:block}
+.viz{position:relative;height:520px;overflow:hidden;border:1px solid var(--line);
+border-radius:var(--r-sm);background:var(--bg);margin-bottom:6px}
+.viz iframe{position:absolute;inset:0;width:100%;height:100%;border:0;
+opacity:0;transition:opacity .3s ease}
+.viz.is-live iframe{opacity:1}
+.viz.is-live .viz-fb{opacity:0;pointer-events:none}
+.viz-fb{position:absolute;inset:0;display:flex;flex-direction:column;
+align-items:center;justify-content:center;gap:8px;text-align:center;
+padding:20px;transition:opacity .3s ease;background:var(--card)}
+.vt{font-weight:600;font-size:var(--fs-small)}
+.vs{font-size:var(--fs-micro);color:var(--muted)}
+.viz.is-dead .vs{color:var(--bad)}
 .explore{display:inline-block;margin:18px 0 22px;padding:13px 20px;
 border-radius:var(--r-sm);background:var(--accent);color:#fff;text-decoration:none;
 font-size:var(--fs-small);font-weight:600;min-height:44px;
@@ -880,7 +947,14 @@ transition:filter .15s ease,transform .1s ease}
 a{color:var(--accent)}
 footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);
 color:var(--muted);font-size:var(--fs-small)}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* Reduced motion means no vestibular motion: travel, parallax, large
+   surfaces sliding. Colour and opacity feedback are comprehension aids and
+   should survive. The springs read the query at runtime. */
+@media (prefers-reduced-motion:reduce){
+  *{transition-property:opacity,color,background-color,border-color!important;
+    transition-duration:.12s!important}
+  .chev{transition:none!important}
+}
 @media (max-width:900px){
   .grid{grid-template-columns:1fr}
 }
@@ -896,63 +970,396 @@ color:var(--muted);font-size:var(--fs-small)}
 """
 
 JS = """
-// One period drives the whole page: the recommendations pane and the
-// content-type panes. Content type is chosen independently, so the visible
-// pane is (period, content type).
+// One period drives the whole page: the KPI strip, the recommendations, the
+// follower panel and the content-type panes. Content type is chosen
+// independently, so the visible pane is (period, content type).
 //
-// The tabs declare role="tab", which is a promise that arrow keys work and that
-// only the selected tab is in the tab order. Both are implemented below; a
-// half-kept promise is worse for a screen reader than no roles at all.
+// Everything below is one spring engine and three things built on it: a
+// selection pill that travels, stages that animate their own height so the
+// page does not jolt, and disclosures that open at the same speed their
+// chevron turns. No dependencies.
 (function () {
+  'use strict';
+
+  // ── reduced motion, read live ─────────────────────────────────────────
+  // Someone can change this with the page open, and CSS transitions are not
+  // what is moving any more, so the query has to be listened to rather than
+  // read once at load.
+  var rmq = matchMedia('(prefers-reduced-motion: reduce)');
+  var reduced = rmq.matches;
+  if (rmq.addEventListener) rmq.addEventListener('change', function (e) {
+    reduced = e.matches;
+  });
+
+  // ── spring ────────────────────────────────────────────────────────────
+  // Critically damped: damping 1.0, so nothing overshoots. Bounce is earned
+  // by momentum, and a pane that merely changed has not earned it.
+  var pool = [], raf = null, last = 0;
+  function frame(now) {
+    var dt = Math.min((now - last) / 1000, 1 / 15); last = now;
+    for (var i = 0; i < pool.length; i++) pool[i].step(dt);
+    pool = pool.filter(function (s) { return !s.done; });
+    raf = pool.length ? requestAnimationFrame(frame) : null;
+  }
+  function Spring(v, response, onPaint) {
+    this.value = v; this.target = v; this.velocity = 0; this.done = true;
+    this.response = response || 0.36; this.onPaint = onPaint || null;
+  }
+  Spring.prototype.step = function (dt) {
+    var w = 2 * Math.PI / this.response,
+        n = Math.max(1, Math.ceil(dt * 240)), h = dt / n;
+    for (var i = 0; i < n; i++) {
+      this.velocity += (-w * w * (this.value - this.target)
+                        - 2 * w * this.velocity) * h;
+      this.value += this.velocity * h;
+    }
+    if (Math.abs(this.value - this.target) < 0.12 &&
+        Math.abs(this.velocity) < 0.5) {
+      this.value = this.target; this.velocity = 0; this.done = true;
+    }
+    if (this.onPaint) this.onPaint(this);
+  };
+  Spring.prototype.set = function (t, vel) {
+    this.target = t;
+    if (vel != null) this.velocity = vel;
+    // requestAnimationFrame is paused in a background tab, which would leave a
+    // spring stalled mid-flight and a disclosure open at zero height. Nobody
+    // is watching an animation they cannot see, so settle it immediately.
+    if (reduced || document.hidden) {
+      this.value = t; this.velocity = 0; this.done = true;
+      if (this.onPaint) this.onPaint(this);
+      return;
+    }
+    this.done = false;
+    if (pool.indexOf(this) < 0) pool.push(this);
+    if (raf === null) { last = performance.now(); raf = requestAnimationFrame(frame); }
+  };
+  Spring.prototype.jump = function (v) {
+    this.value = v; this.target = v; this.velocity = 0; this.done = true;
+    if (this.onPaint) this.onPaint(this);
+  };
+
+  function project(v) { return (v / 1000) * 0.998 / (1 - 0.998); }
+  function rubber(o, d) { return (o * d * 0.55) / (d + 0.55 * Math.abs(o)); }
+
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) return;
+    for (var i = pool.length - 1; i >= 0; i--) {
+      var sp = pool[i];
+      sp.value = sp.target; sp.velocity = 0; sp.done = true;
+      if (sp.onPaint) sp.onPaint(sp);
+    }
+    pool = [];
+  });
+
   var state = { period: 'month', fmt: '0' };
 
-  function apply() {
-    // Every prefix here is period-keyed: KPI strip, recommendations, follower
-    // growth. One control, one state, whole page.
-    ['k', 'p', 'g'].forEach(function (prefix) {
-      document.querySelectorAll('[id^="' + prefix + '-"].pane').forEach(function (el) {
-        el.classList.toggle('is-on', el.id === prefix + '-' + state.period);
-      });
+  // ── stages: animate height so the column below does not jolt ──────────
+  function Stage(el) {
+    var self = this;
+    this.el = el;
+    this.h = new Spring(0, 0.42, function (sp) {
+      self.el.style.height = sp.value + 'px';
+      if (sp.done) {
+        self.el.style.height = '';
+        self.el.classList.remove('is-moving');
+        var out = self.el.querySelector('.pane.is-out');
+        if (out) out.classList.remove('is-out');
+      }
     });
-    document.querySelectorAll('[id^="f-"].pane').forEach(function (el) {
-      el.classList.toggle('is-on', el.id === 'f-' + state.period + '-' + state.fmt);
+  }
+  Stage.prototype.to = function (id, dir) {
+    var next = this.el.querySelector('#' + CSS.escape(id));
+    var cur = this.el.querySelector('.pane.is-on');
+    if (!next || next === cur) return;
+    // The presentation value, not the logical one. Starting from what is
+    // actually on screen is what lets a fast reversal redirect rather than
+    // hit a brick wall.
+    var from = this.el.getBoundingClientRect().height;
+    this.el.classList.add('is-moving');
+    this.el.style.height = from + 'px';
+    if (cur) cur.classList.replace('is-on', 'is-out');
+    next.classList.add('is-on');
+    var to = next.getBoundingClientRect().height;
+    if (cur) slide(cur, 0, -dir * 14);
+    slide(next, 1, dir * 14, true);
+    // Deliberately not resetting velocity mid-flight.
+    if (this.h.done) { this.h.value = from; this.h.velocity = 0; }
+    this.h.set(to);
+  };
+  function slide(el, opacity, dx, incoming) {
+    if (reduced) { el.style.opacity = ''; el.style.transform = ''; return; }
+    if (incoming) {
+      el.style.transition = 'none';
+      el.style.opacity = '0';
+      el.style.transform = 'translate3d(' + dx + 'px,0,0)';
+      el.getBoundingClientRect();
+      el.style.transition = 'opacity .22s ease, transform .26s ease';
+      el.style.opacity = '1';
+      el.style.transform = 'translate3d(0,0,0)';
+    } else {
+      el.style.transition = 'opacity .18s ease, transform .26s ease';
+      el.style.opacity = '0';
+      el.style.transform = 'translate3d(' + dx + 'px,0,0)';
+    }
+  }
+
+  var stages = [].slice.call(document.querySelectorAll('.stage')).map(function (el) {
+    var st = new Stage(el);
+    st.key = el.getAttribute('data-stage');
+    return st;
+  });
+  var ORDER = ['week', 'month', 'year'];
+
+  function apply(dir) {
+    stages.forEach(function (st) {
+      var id = st.key === 'f' ? 'f-' + state.period + '-' + state.fmt
+                              : st.key + '-' + state.period;
+      st.to(id, dir);
     });
   }
 
-  function select(btn, focus) {
-    var group = btn.parentElement;
-    group.querySelectorAll('.seg').forEach(function (b) {
-      var on = b === btn;
-      b.classList.toggle('is-on', on);
-      b.setAttribute('aria-selected', on ? 'true' : 'false');
-      b.tabIndex = on ? 0 : -1;          // roving tabindex
-    });
+  // ── the pill: one object that travels, and that you can grab ──────────
+  function Pill(root) {
+    var self = this;
+    this.root = root;
+    this.pill = root.querySelector('.segpill');
+    this.segs = [].slice.call(root.querySelectorAll('.seg'));
+    if (!this.pill || !this.segs.length) return;
+    this.idx = Math.max(0, this.segs.findIndex(function (b) {
+      return b.classList.contains('is-on');
+    }));
+    var paint = function () { self.paint(); };
+    // Two springs. A single spring over position and width desynchronises
+    // the moment the two axes carry different velocities.
+    this.sx = new Spring(0, 0.36, paint);
+    this.sw = new Spring(0, 0.36, paint);
+    this.measure();
+    this.wire();
+  }
+  Pill.prototype.paint = function () {
+    this.pill.style.transform = 'translate3d(' + this.sx.value + 'px,0,0)';
+    this.pill.style.width = this.sw.value + 'px';
+    var c = this.sx.value + this.sw.value / 2;
+    for (var i = 0; i < this.segs.length; i++) {
+      this.segs[i].classList.toggle('is-on',
+        c >= this.segs[i].offsetLeft &&
+        c < this.segs[i].offsetLeft + this.segs[i].offsetWidth);
+    }
+  };
+  Pill.prototype.measure = function () {
+    var s = this.segs[this.idx];
+    if (!s || !s.offsetWidth) return;
+    this.sx.jump(s.offsetLeft); this.sw.jump(s.offsetWidth);
+    this.root.classList.add('ready');
+  };
+  Pill.prototype.nearest = function (c) {
+    var b = 0, bd = Infinity;
+    for (var i = 0; i < this.segs.length; i++) {
+      var d = Math.abs(this.segs[i].offsetLeft
+                       + this.segs[i].offsetWidth / 2 - c);
+      if (d < bd) { bd = d; b = i; }
+    }
+    return b;
+  };
+  Pill.prototype.goTo = function (i, vel, focus) {
+    i = Math.max(0, Math.min(this.segs.length - 1, i));
+    var dir = i > this.idx ? 1 : i < this.idx ? -1 : 0;
+    this.idx = i;
+    for (var j = 0; j < this.segs.length; j++) {
+      this.segs[j].setAttribute('aria-selected', j === i ? 'true' : 'false');
+      this.segs[j].tabIndex = j === i ? 0 : -1;
+    }
+    this.sw.set(this.segs[i].offsetWidth);
+    this.sx.set(this.segs[i].offsetLeft, vel);
+    var btn = this.segs[i];
     if (btn.dataset.period) state.period = btn.dataset.period;
     if (btn.dataset.fmt) state.fmt = btn.dataset.fmt;
     if (focus) btn.focus();
-    apply();
+    apply(dir || 1);
+  };
+  Pill.prototype.wire = function () {
+    var self = this, drag = null;
+    this.root.addEventListener('pointerdown', function (e) {
+      if (e.button) return;
+      var px = e.clientX - self.root.getBoundingClientRect().left;
+      var seg = e.target.closest ? e.target.closest('.seg') : null;
+      var hit = seg ? self.segs.indexOf(seg) : -1;
+      var onPill = px >= self.sx.value && px <= self.sx.value + self.sw.value;
+      if (!onPill && hit >= 0 && hit !== self.idx) self.goTo(hit);
+      // A pointer press has handled this; the click that follows must not
+      // handle it a second time.
+      self.viaPointer = true;
+      setTimeout(function () { self.viaPointer = false; }, 400);
+      try { self.root.setPointerCapture(e.pointerId); } catch (err) {}
+      drag = { id: e.pointerId, startX: px, grab: 0, moved: false,
+               hist: [{ x: px, t: performance.now() }] };
+    });
+    this.root.addEventListener('pointermove', function (e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      var px = e.clientX - self.root.getBoundingClientRect().left;
+      drag.hist.push({ x: px, t: performance.now() });
+      if (drag.hist.length > 6) drag.hist.shift();
+      if (!drag.moved) {
+        if (Math.abs(px - drag.startX) < 10) return;   // hysteresis: a sloppy tap stays a tap
+        drag.moved = true;
+        drag.grab = px - self.sx.value;
+        self.root.classList.add('dragging');
+      }
+      var lo = self.segs[0].offsetLeft, lastSeg = self.segs[self.segs.length - 1];
+      var hi = lastSeg.offsetLeft + lastSeg.offsetWidth - self.sw.value;
+      var want = px - drag.grab;
+      if (want < lo) want = lo - rubber(lo - want, self.root.offsetWidth);
+      else if (want > hi) want = hi + rubber(want - hi, self.root.offsetWidth);
+      self.sx.jump(want);
+      self.sw.set(self.segs[self.nearest(self.sx.value + self.sw.value / 2)].offsetWidth);
+    });
+    function release(e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      var moved = drag.moved, h = drag.hist;
+      self.root.classList.remove('dragging'); drag = null;
+      if (!moved) return;
+      var v = 0, a = h[0], b = h[h.length - 1], dt = (b.t - a.t) / 1000;
+      if (dt > 0.004) v = (b.x - a.x) / dt;
+      // Land where the gesture was heading, not where it stopped.
+      self.goTo(self.nearest(self.sx.value + self.sw.value / 2 + project(v)), v);
+    }
+    this.root.addEventListener('pointerup', release);
+    this.root.addEventListener('pointercancel', release);
+    // Enter and Space on a focused tab fire click, not pointerdown, and so do
+    // screen readers and .click(). Without this the keyboard cannot select.
+    this.root.addEventListener('click', function (e) {
+      if (self.viaPointer) return;
+      var seg = e.target.closest ? e.target.closest('.seg') : null;
+      var i = seg ? self.segs.indexOf(seg) : -1;
+      if (i >= 0 && i !== self.idx) self.goTo(i);
+    });
+    this.root.addEventListener('keydown', function (e) {
+      var seg = e.target.closest ? e.target.closest('.seg') : null;
+      if (!seg) return;
+      var i = self.segs.indexOf(seg), n = null;
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') n = (i - 1 + self.segs.length) % self.segs.length;
+      else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') n = (i + 1) % self.segs.length;
+      else if (e.key === 'Home') n = 0;
+      else if (e.key === 'End') n = self.segs.length - 1;
+      if (n === null) return;
+      e.preventDefault();
+      self.goTo(n, null, true);
+    });
+    if (window.ResizeObserver) {
+      new ResizeObserver(function () { if (!drag) self.measure(); }).observe(this.root);
+    }
+  };
+
+  var pills = [].slice.call(document.querySelectorAll('.segs')).map(function (el) {
+    return new Pill(el);
+  });
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () {
+      pills.forEach(function (p) { if (p.measure) p.measure(); });
+    });
   }
 
-  document.addEventListener('click', function (e) {
-    var btn = e.target.closest('.seg');
-    if (btn) select(btn, false);
+  // ── disclosures open at the speed their chevron turns ─────────────────
+  [].slice.call(document.querySelectorAll('details')).forEach(function (d) {
+    var body = document.createElement('div');
+    body.className = 'd-body';
+    while (d.children.length > 1) body.appendChild(d.children[1]);
+    d.appendChild(body);
+    var sp = new Spring(0, 0.34, function (s) {
+      body.style.height = s.value + 'px';
+      if (s.done) {
+        body.style.height = s.target ? '' : '0px';
+        if (!s.target) d.open = false;      // stay open until the spring lands
+      }
+    });
+    d.querySelector('summary').addEventListener('click', function (e) {
+      e.preventDefault();
+      var opening = !d.classList.contains('is-open');
+      d.classList.toggle('is-open', opening);
+      if (opening) {
+        d.open = true;
+        body.style.height = 'auto';
+        var to = body.getBoundingClientRect().height;
+        body.style.height = sp.value + 'px';
+        sp.set(to);
+      } else {
+        if (sp.done) sp.value = body.getBoundingClientRect().height;
+        sp.set(0);
+      }
+    });
   });
 
-  document.addEventListener('keydown', function (e) {
-    var btn = e.target.closest('.seg');
-    if (!btn) return;
-    var keys = { ArrowLeft: -1, ArrowUp: -1, ArrowRight: 1, ArrowDown: 1 };
-    var segs = Array.prototype.slice.call(btn.parentElement.querySelectorAll('.seg'));
-    var i = segs.indexOf(btn), next = null;
-    if (e.key in keys) next = segs[(i + keys[e.key] + segs.length) % segs.length];
-    else if (e.key === 'Home') next = segs[0];
-    else if (e.key === 'End') next = segs[segs.length - 1];
-    if (!next) return;
-    e.preventDefault();
-    select(next, true);
+  // ── scroll edge: the rule only earns its keep once content is under it ──
+  var chrome = document.querySelector('.chrome');
+  if (chrome && chrome.parentNode) {
+    // A sentinel above the bar rather than a scroll listener: no rAF, no
+    // per-frame work, and it keeps working in a background tab.
+    var sentinel = document.createElement('div');
+    sentinel.className = 'chrome-sentinel';
+    chrome.parentNode.insertBefore(sentinel, chrome);
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (es) {
+        chrome.classList.toggle('is-stuck', !es[0].isIntersecting);
+      }, { threshold: 0 }).observe(sentinel);
+    } else {
+      addEventListener('scroll', function () {
+        chrome.classList.toggle('is-stuck',
+          chrome.getBoundingClientRect().top <= 0.5);
+      }, { passive: true });
+    }
+  }
+
+  // ── tables: fade the overflowing edge, and lift it at the end ───────────
+  [].slice.call(document.querySelectorAll('.tw')).forEach(function (tw) {
+    var upd = function () {
+      var over = tw.scrollWidth - tw.clientWidth;
+      tw.classList.toggle('no-overflow', over <= 1);
+      tw.classList.toggle('at-end', over > 1 && tw.scrollLeft >= over - 1);
+    };
+    tw.addEventListener('scroll', upd, { passive: true });
+    if (window.ResizeObserver) new ResizeObserver(upd).observe(tw);
+    upd();
   });
 
-  apply();
+  // ── charts: mount as each nears the viewport, not nine at once ─────────
+  var vizzes = [].slice.call(document.querySelectorAll('.viz[data-src]'));
+  function mount(v) {
+    if (v.dataset.mounted) return;
+    v.dataset.mounted = '1';
+    var f = document.createElement('iframe');
+    f.setAttribute('title', v.dataset.title || 'Chart');
+    f.setAttribute('loading', 'lazy');
+    var dead = setTimeout(function () {
+      if (!v.classList.contains('is-live')) {
+        v.classList.add('is-dead');
+        var s2 = v.querySelector('.vs');
+        if (s2) s2.textContent = 'This chart could not load here.';
+      }
+    }, 6000);
+    f.addEventListener('load', function () {
+      clearTimeout(dead);
+      v.classList.add('is-live');
+    });
+    f.src = v.dataset.src;
+    v.appendChild(f);
+  }
+  if (vizzes.length) {
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          io.unobserve(e.target);
+          mount(e.target);
+        });
+      }, { rootMargin: '500px 0px' });
+      vizzes.forEach(function (v) { io.observe(v); });
+    } else {
+      vizzes.forEach(mount);
+    }
+  }
+
+  apply(1);
 })();
 """
 
