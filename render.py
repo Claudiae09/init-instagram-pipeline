@@ -20,6 +20,7 @@ import pandas as pd
 import audience as AU
 import timing as TM
 import chart_notes as CN
+import competitors as CP
 import report_sections as R
 import topics as TP
 
@@ -82,6 +83,37 @@ def kpi_panes(m):
         out.append(f'<div class="pane{on}" id="k-{key}" role="tabpanel" '
                    f'aria-labelledby="t-{key}">{kpi_strip(m, days, label)}</div>')
     return "".join(out)
+
+
+def competitor_section(m):
+    """Where the account sits against the other orgs and hackathons."""
+    ours = None
+    try:
+        ours = float(m.attrs.get("followers")) if m.attrs.get("followers") else None
+    except Exception:
+        ours = None
+    cf = CP.competitor_findings(CSV, ours)
+    notes = "".join(f"<li>{n}</li>" for n in CP.competitor_note(cf))
+
+    bars = ""
+    if cf.get("enough") and cf["rows"]:
+        top = max(r["followers"] for r in cf["rows"])
+        bars = '<div class="bars">' + "".join(
+            f'<div class="bar{" me" if r["ours"] else ""}">'
+            f'<span class="bl">@{esc(r["handle"])}</span>'
+            f'<span class="bt"><i style="width:'
+            f'{r["followers"] / top * 100:.1f}%"></i></span>'
+            f'<span class="bv">{r["followers"]:,.0f}</span></div>'
+            for r in cf["rows"]) + "</div>"
+        stamp = (f'<p class="sub2">As recorded {cf["as_of"]:%d %b %Y}, across '
+                 f'{cf["weeks"]} reading{"s" if cf["weeks"] != 1 else ""}.</p>')
+    else:
+        stamp = ('<p class="sub2">Follower counts for the accounts you compete '
+                 'with for the same students.</p>')
+
+    return ('<section class="block panel"><h2>How you compare</h2>'
+            + stamp + bars
+            + f'<ul class="csays">{notes}</ul></section>')
 
 
 def guidance_card(m):
@@ -795,12 +827,15 @@ letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 
 /* ── audience bars ──────────────────────────────────────────────────────── */
 .bars{margin:14px 0 16px}
-.bar{display:grid;grid-template-columns:56px 1fr 44px;align-items:center;gap:10px;
+.bar{display:grid;grid-template-columns:minmax(56px,auto) 1fr 52px;align-items:center;gap:10px;
 margin:0 0 6px;font-size:var(--fs-micro);color:var(--muted)}
 .bl{font-variant-numeric:tabular-nums}
 .bt{background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);
 height:14px;overflow:hidden}
 .bt i{display:block;height:100%;background:var(--accent);opacity:.85}
+.bar.me .bl,.bar.me .bv{color:var(--fg);font-weight:700}
+.bar.me .bt i{opacity:1}
+.bar.me .bt{border-color:var(--soft-line)}
 .bv{text-align:right;font-variant-numeric:tabular-nums;color:var(--fg);font-weight:600}
 
 /* ── charts ─────────────────────────────────────────────────────────────── */
@@ -908,6 +943,7 @@ def build(m):
          topic_section(m),
          audience_section("who"),
          "</div>",
+         competitor_section(m),
          format_section(m),
          charts_section(m),
          # Build stamp so it is obvious at a glance whether the deployed page

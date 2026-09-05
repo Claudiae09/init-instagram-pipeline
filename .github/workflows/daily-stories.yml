@@ -39,6 +39,12 @@ jobs:
           GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
         run: python push_to_sheets.py
 
+      - name: Sync competitor follower counts from the Sheet
+        env:
+          GSHEET_ID: ${{ secrets.GSHEET_ID }}
+          GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
+        run: python pull_competitors.py
+
       - name: Rebuild the dashboard page
         run: python render.py
 
