@@ -138,23 +138,6 @@ touches `site/` triggers a redeploy. There is no build step.
 
 ---
 
-## Housekeeping
-
-Two things worth cleaning up:
-
-- **A launchd agent is still loaded** on Claudia's Mac
-  (`~/Library/LaunchAgents/com.initfiu.instagrampull.plist`) running
-  `run_pull.sh` weekly. GitHub Actions took this over; the local job is
-  redundant and pulls with the same token. Remove with:
-  `launchctl unload ~/Library/LaunchAgents/com.initfiu.instagrampull.plist`
-- **`generate_report.py` is dead.** `render.py` replaced it and no workflow
-  references it.
-
-Also outstanding: Tableau **Sheet1** and **Sheet6** still carry an
-`Is Current Year` filter, which makes 8 image posts outrank 71 carousels. The
-chart notes warn about it, but the fix is in the workbook.
-
----
 
 ## Notes
 
