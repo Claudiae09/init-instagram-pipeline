@@ -19,17 +19,18 @@ import report_sections as R
 TOPICS = {
     "Giveaways":         r"giveaway|raffle|\bwin a\b|\bprize",
     "Deadlines and applications": r"\bapply\b|application|deadline|closes? (?:today|soon)|last chance",
-    "Member spotlights":  r"spotlight|meet (?:our|the)|congrat|alumni|shoutout",
+    "Member spotlights":  r"spotlight|congrat|\balum(?:ni|na|nus)\b|shoutout|member of the (?:week|month)|meet one of",
     "ShellHacks":        r"shellhack",
     "Workshops and learning": r"workshop|bootcamp|learn to|tutorial|intro to|hands.?on",
     "Careers and internships": r"intern(?:ship)?\b|resume|career|hiring|\bjob\b|recruit",
     "Partners and sponsors": r"sponsor|partner|thank you to|powered by",
-    "Socials and hangouts": r"social\b|mixer|game night|pizza|come hang|meet ?up",
-    "Team and behind the scenes": r"our team|e-?board|behind the scenes|board member",
+    "Socials and hangouts": r"\bsocial\b|mixer|game night|pizza|come hang|\bmeet ?up",
+    "Team and behind the scenes": r"\bour team\b|\be-?board\b|behind the scenes|board member",
 }
 
 MIN_TOPIC_POSTS = 8      # below this a topic's rate is noise
 RECENT_DAYS = 30         # window used to spot a topic that has gone quiet
+MIN_YEAR_POSTS = 60      # below this, a single year is too thin to rank subjects
 
 
 def _tag(m):
@@ -64,11 +65,22 @@ def _example(g):
             "example_rate": float(best["_r"])}
 
 
-def topic_findings(m):
-    """Rank topics by share rate over all history, with recent volume alongside."""
+def topic_findings(m, year=None):
+    """Rank topics by share rate, scoped to the current year.
+
+    What worked in 2025 is not necessarily what to make this semester, so the
+    ranking follows the calendar year. If this year is still too thin to rank
+    fairly we fall back to all history and say so on the page."""
+    import datetime as _dt
+    year = year or _dt.date.today().year
     t = _tag(m)
     if not len(t):
         return {"enough": False}
+    scoped = t[t["d"].dt.year == year]
+    if len(scoped) >= MIN_YEAR_POSTS:
+        t, scope = scoped, str(year)
+    else:
+        scope = "all history"
     base = t["shares"].sum() / t["reach"].sum() * 1000
     recent = R.window(t, RECENT_DAYS)
     rows = []
@@ -76,11 +88,14 @@ def topic_findings(m):
         g = t[t[name]]
         if len(g) < MIN_TOPIC_POSTS or not g["reach"].sum():
             continue
-        # same outlier guard used everywhere else: one viral post is not a topic
+        # Same outlier guard used elsewhere, but here it flags rather than
+        # deletes: dropping a subject from the table entirely hides the fact
+        # that it exists. It just cannot be trusted to lead the advice.
         tot = g["shares"].sum()
-        if tot > 0 and g["shares"].max() / tot > R.MAX_POST_CONCENTRATION:
-            continue
+        skewed = bool(tot > 0
+                      and g["shares"].max() / tot > R.MAX_POST_CONCENTRATION)
         rows.append({
+            "skewed": skewed,
             "topic": name, "posts": len(g),
             "rate": g["shares"].sum() / g["reach"].sum() * 1000,
             "recent": int(recent[name].sum()) if len(recent) else 0,
@@ -91,18 +106,20 @@ def topic_findings(m):
     for r in rows:
         r["vs_avg"] = R.pct_change(base, r["rate"])
     rows.sort(key=lambda r: -r["rate"])
+    solid = [r for r in rows if not r["skewed"]]
     # What has been dominating the calendar lately, which is often not the same
     # thing as what performs. That gap is the most useful recommendation here.
     dominant = max(rows, key=lambda r: r["recent"]) if len(recent) else None
-    return {"enough": True, "base": base, "rows": rows, "dominant": dominant,
-            "recent_posts": len(recent), "total": len(t)}
+    return {"enough": True, "base": base, "rows": rows, "solid": solid,
+            "dominant": dominant,
+            "scope": scope, "recent_posts": len(recent), "total": len(t)}
 
 
 def topic_recommendations(tf):
     """Short bullets: what works, what is crowding it out, what to ease off."""
     if not tf.get("enough"):
         return ["Not enough captions yet to tell which subjects work."]
-    rows, base, out = tf["rows"], tf["base"], []
+    rows, base, out = tf["solid"] or tf["rows"], tf["base"], []
     top = rows[0]
 
     out.append(f"<b>Working:</b> {top['topic']}, at {top['rate']:.1f} per 1,000 "
@@ -136,7 +153,9 @@ def topic_recommendations(tf):
                    f"against your {base:.1f} average. Worth posting, just not for "
                    f"growth.")
 
-    out.append(f"<i>Based on {tf['total']} captions. Instagram publishes nothing "
-               f"about what is trending, so this ranks what works for your own "
-               f"audience.</i>")
+    sc = tf.get("scope", "")
+    where = f"your {sc} posts" if sc.isdigit() else "all your posts"
+    out.append(f"<i>Based on {tf['total']} captions from {where}. Instagram "
+               f"publishes nothing about what is trending, so this ranks what "
+               f"works for your own audience.</i>")
     return out

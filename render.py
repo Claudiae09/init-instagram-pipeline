@@ -277,17 +277,24 @@ def topic_section(m):
                            + "</a>")
             else:
                 subject = name
+            star = ('<span class="skew" title="One post accounts for most of '
+                    "this subject's shares\">*</span>") if r.get("skewed") else ""
             cells.append(
                 f'<tr><td>{subject}</td><td>{r["posts"]}</td>'
-                f'<td>{r["rate"]:.1f}</td>'
+                f'<td>{r["rate"]:.1f}{star}</td>'
                 f'<td class="{"up" if r["vs_avg"] > 0 else "down"}">'
                 f'{r["vs_avg"]:+.0f}%</td><td>{r["recent"]}</td></tr>')
         rows = "".join(cells)
+        if any(r.get("skewed") for r in tf["rows"]):
+            rows += ('<tr><td colspan="5" class="foot">* One post accounts for '
+                     'most of this subject\'s shares, so the rate is not '
+                     'reliable yet. Left out of the advice above.</td></tr>')
         # open by default: this table is the answer to "what should we post",
         # and hiding it behind a click meant it went unnoticed
         table = ('<details class="why-mini" open><summary><span class="chev">›</span> '
                  'Every subject</summary>'
-                 '<p class="sub2">Each subject links to a real example post.</p>'
+                 f'<p class="sub2">Each subject links to a real example post. '
+                 f'Ranked on your {esc(tf.get("scope", ""))} posts.</p>'
                  '<div class="tw"><table class="topics">'
                  '<thead><tr><th>Subject</th><th>Posts</th><th>Shares<br>per 1k</th>'
                  '<th>vs your<br>average</th><th>Last<br>30 days</th></tr></thead>'
@@ -391,6 +398,9 @@ a.tlink{color:var(--accent);text-decoration:none;display:block}
 a.tlink:hover{text-decoration:underline}
 a.tlink .eg{display:block;color:var(--muted);font-weight:400;font-size:.78rem;
 line-height:1.35;margin-top:2px;text-decoration:none}
+table.topics .skew{color:var(--muted);font-weight:400}
+table.topics td.foot{color:var(--muted);font-size:.78rem;line-height:1.45;
+padding-top:9px;border-bottom:0}
 table.topics .up{color:var(--good);font-weight:600}
 table.topics .down{color:#a4472e;font-weight:600}
 .csays li:last-child{margin:0}
