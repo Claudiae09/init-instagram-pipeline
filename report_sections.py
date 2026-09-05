@@ -289,3 +289,84 @@ def story_recommendations(sf):
         out.append(f"<i>Early read — based on {sf['n']} stories. Treat as a direction, "
                    f"not a conclusion; it firms up as the daily job collects more.</i>")
     return out
+
+
+# ── why did a period move? ──────────────────────────────────────────────────
+def diagnose(m, days):
+    """Explain a period's share-rate change by testing the things we can measure:
+    format mix, posting time, caption length, and within-window spread.
+
+    Returns the factors that actually shifted. If none did, that is itself the
+    finding — the difference is in the content, not the mechanics.
+    """
+    cur, prev = window(m, days), window(m, days, offset=days)
+    if len(cur) < MIN_POSTS or len(prev) < MIN_POSTS:
+        return None
+    cur, prev = cur.copy(), prev.copy()
+    for d in (cur, prev):
+        d["caplen"] = d["caption"].fillna("").astype(str).str.len()
+        d["rate"] = d["shares"] / d["reach"] * 1000
+
+    out = {"factors": [], "cur_rate": rate(cur, "shares"),
+           "prev_rate": rate(prev, "shares"), "n": len(cur)}
+
+    # 1. format mix — did the share of the best format drop?
+    best_fmt = max(FORMATS, key=lambda f: rate(m[m["post_type"] == f], "shares"))
+    c_share = (cur["post_type"] == best_fmt).mean() * 100
+    p_share = (prev["post_type"] == best_fmt).mean() * 100
+    if abs(c_share - p_share) >= 15:
+        out["factors"].append({
+            "name": "format mix", "helped": c_share > p_share,
+            "text": f"{best_fmt}s went from {p_share:.0f}% to {c_share:.0f}% of posts"})
+
+    # 2. caption length
+    cl, pl = cur["caplen"].median(), prev["caplen"].median()
+    if pl and abs(pct_change(pl, cl)) >= 25:
+        out["factors"].append({
+            "name": "caption length", "helped": cl > pl,
+            "text": f"median caption went from {pl:.0f} to {cl:.0f} characters"})
+
+    # 3. posting hour drift
+    ch, ph = cur["publish_hour_est"].median(), prev["publish_hour_est"].median()
+    if abs(ch - ph) >= 2:
+        out["factors"].append({
+            "name": "posting time", "helped": None,
+            "text": f"typical posting hour moved from {ph:.0f}:00 to {ch:.0f}:00"})
+
+    # 4. spread — is a minority of posts dragging the average?
+    weak = cur[cur["rate"] < out["cur_rate"] * 0.5]
+    strong = cur[cur["rate"] > out["cur_rate"] * 1.5]
+    out["weak_n"], out["strong_n"] = len(weak), len(strong)
+    out["spread"] = len(weak) >= 2 and len(strong) >= 1
+    out["weak_posts"] = weak.nsmallest(3, "rate")[
+        ["caption", "permalink", "post_type", "reach", "shares", "rate"]
+    ].to_dict("records")
+    return out
+
+
+def diagnosis_text(dg):
+    """Plain-language 'why', including saying so when the data can't explain it."""
+    if not dg:
+        return []
+    out = []
+    helped = [f for f in dg["factors"] if f["helped"] is True]
+    hurt = [f for f in dg["factors"] if f["helped"] is False]
+    if hurt:
+        out.append("<b>What likely hurt:</b> " +
+                   "; ".join(f["text"] for f in hurt) + ".")
+    if helped:
+        out.append("<b>What moved in your favour:</b> " +
+                   "; ".join(f["text"] for f in helped) + ".")
+    if dg["spread"]:
+        out.append(
+            f"<b>It wasn't how much you posted — it was which posts.</b> "
+            f"{dg['strong_n']} post{'s' if dg['strong_n'] != 1 else ''} did well while "
+            f"{dg['weak_n']} landed under half the average. The gap between your best and "
+            f"worst post this period is far bigger than the gap between periods.")
+    if not hurt and dg.get("spread"):
+        out.append(
+            "<b>Format, timing and caption length don't separate the winners from the "
+            "losers here</b> — so the difference is the content itself: the subject, the "
+            "hook, the visual. Open the weak posts below and compare them to your best "
+            "performer for that format.")
+    return out

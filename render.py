@@ -81,10 +81,32 @@ def decision_card(m):
                     f'role="tab" aria-selected="{str(i == 1).lower()}">{label}</button>')
         meta = (f"{p['posts']} posts in the last {days} days"
                 if p.get("enough") else "not enough posts yet")
+
+        # "Why did this move?" — only shown when we can actually say something.
+        dg = R.diagnose(m, days)
+        why = ""
+        if dg:
+            lines = R.diagnosis_text(dg)
+            weak = ""
+            if dg.get("weak_posts"):
+                items = "".join(
+                    f'<li><a href="{esc(w["permalink"])}" target="_blank" '
+                    f'rel="noopener">{esc(str(w["caption"])[:80])}…</a> '
+                    f'<span class="dim">{w["post_type"].replace("IG ","")} · '
+                    f'{w["rate"]:.1f} per 1k</span></li>'
+                    for w in dg["weak_posts"])
+                weak = ('<p class="line"><b>Worth a look — the weakest posts '
+                        f'this period:</b></p><ul class="weak">{items}</ul>')
+            if lines or weak:
+                why = ('<details class="why-mini"><summary>'
+                       '<span class="chev">›</span> Why did this happen?</summary>'
+                       + "".join(f"<p class='line'>{l}</p>" for l in lines)
+                       + weak + "</details>")
+
         panes.append(
             f'<div class="pane{active}" id="p-{key}" role="tabpanel">'
             f'<p class="pane-meta">{meta}</p><ol>'
-            + "".join(f"<li>{r}</li>" for r in recs) + "</ol></div>")
+            + "".join(f"<li>{r}</li>" for r in recs) + "</ol>" + why + "</div>")
     return (
         '<section class="decision">'
         '<div class="decision-head"><h2>What to do next</h2>'
@@ -231,6 +253,15 @@ transition:background .15s ease,color .15s ease,transform .1s ease}
 .pane{display:none}.pane.is-on{display:block}
 
 .block{margin:0 0 34px}
+.why-mini{margin:14px 0 0;border-top:1px solid var(--soft-line);padding-top:10px}
+.why-mini summary{cursor:pointer;list-style:none;font-weight:600;font-size:.9rem;
+color:var(--accent);display:flex;align-items:center;gap:6px;padding:4px 0}
+.why-mini summary::-webkit-details-marker{display:none}
+.why-mini[open] .chev{transform:rotate(90deg)}
+.why-mini .line{font-size:.92rem;margin:8px 0}
+ul.weak{margin:6px 0 4px;padding-left:20px;font-size:.9rem}
+ul.weak li{margin:0 0 6px}
+.dim{color:var(--muted);font-size:.85em}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;
 margin:14px 0 18px}
 .stats div{background:var(--card);border:1px solid var(--line);border-radius:10px;
