@@ -95,40 +95,34 @@ def competitor_section(m):
         return ('<section class="block panel"><h2>How you compare</h2>'
                 f'<ul class="csays">{notes}</ul></section>')
 
+    # Only show Change once there is something to subtract; an empty column
+    # reads as broken rather than as pending.
+    has_change = any(r.get("change") is not None for r in cf["rows"])
     body = []
     for r in cf["rows"]:
         me = " me" if r["ours"] else ""
         name = (f'<a class="tlink" href="https://www.instagram.com/'
                 f'{esc(r["handle"])}/" target="_blank" rel="noopener">'
                 f'@{esc(r["handle"])}</a>')
-        if r["ours"]:
-            name += '<span class="you">you</span>'
         fol = f'{r["followers"]:,.0f}' if r["followers"] is not None else "—"
-        if r.get("change") is not None:
-            ch = (f'<span class="{"up" if r["change"] >= 0 else "down"}">'
-                  f'{r["change"]:+,.0f}</span>')
-        else:
-            ch = "—"
-        if r["ours"]:
-            gap = "—"
-        elif r.get("gap") is not None:
-            gap = (f'<span class="{"down" if r["gap"] > 0 else "up"}">'
-                   f'{r["gap"]:+,.0f}</span>')
-        else:
-            gap = "—"
-        body.append(f'<tr class="crow{me}"><td>{name}</td>'
-                    f'<td class="n">{fol}</td><td class="n">{ch}</td>'
-                    f'<td class="n">{gap}</td></tr>')
+        cells = f'<td>{name}</td><td class="n">{fol}</td>'
+        if has_change:
+            if r.get("change") is not None:
+                cells += (f'<td class="n {"up" if r["change"] >= 0 else "down"}">'
+                          f'{r["change"]:+,.0f}</td>')
+            else:
+                cells += '<td class="n">—</td>'
+        body.append(f'<tr class="crow{me}">{cells}</tr>')
 
     stamp = (f'As recorded {cf["as_of"]:%d %b %Y}'
              + (f', across {cf["weeks"]} readings.' if cf["weeks"] > 1 else '.'))
     return ('<section class="block panel"><h2>How you compare</h2>'
             f'<p class="sub2">The accounts competing for the same students. '
             f'{stamp} Updated monthly.</p>'
-            '<div class="tw"><table class="topics"><thead><tr>'
+            '<div class="tw"><table class="topics compact"><thead><tr>'
             '<th>Account</th><th class="n">Followers</th>'
-            '<th class="n">Change</th><th class="n">vs you</th>'
-            f'</tr></thead><tbody>{"".join(body)}</tbody></table></div>'
+            + ('<th class="n">Change</th>' if has_change else '')
+            + f'</tr></thead><tbody>{"".join(body)}</tbody></table></div>'
             f'<ul class="csays">{notes}</ul></section>')
 
 
@@ -807,6 +801,9 @@ line-height:1.25;white-space:nowrap}
 table.topics th.n{text-align:right}
 table.topics td{padding:8px 10px 8px 0;border-bottom:1px solid var(--line)}
 table.topics td:first-child{font-weight:500;min-width:190px}
+table.compact td{padding:5px 10px 5px 0;font-size:var(--fs-micro)}
+table.compact td:first-child{min-width:0}
+table.compact .tlink{font-size:var(--fs-small)}
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;padding-right:0}
 table.topics .skew{color:var(--muted);font-weight:400}
 table.topics td.foot{color:var(--muted);font-size:var(--fs-micro);line-height:1.45;
@@ -818,8 +815,6 @@ a.tlink:hover{text-decoration:underline}
 tr.crow.me td{background:var(--soft)}
 tr.crow.me td:first-child{border-radius:var(--r-sm) 0 0 var(--r-sm)}
 tr.crow.me td:last-child{border-radius:0 var(--r-sm) var(--r-sm) 0}
-.you{display:inline-block;margin-left:8px;font-size:var(--fs-micro);
-font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em}
 a.tlink .eg{display:block;color:var(--muted);font-weight:400;
 font-size:var(--fs-micro);line-height:1.35;margin-top:2px;text-decoration:none}
 

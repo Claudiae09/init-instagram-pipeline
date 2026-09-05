@@ -125,8 +125,8 @@ def competitor_note(cf):
     if grew and us and us.get("change") is not None:
         faster = [r for r in grew if r["growth_gap"] > 0]
         if not faster:
-            out.append(f"<b>You grew fastest</b> this week, {us['change']:+,.0f} "
-                       f"against every account tracked.")
+            out.append(f"<b>You grew fastest</b> since the last reading, "
+                       f"{us['change']:+,.0f} against every account tracked.")
         else:
             top = max(faster, key=lambda r: r["change"])
             out.append(f"<b>@{top['handle']} grew fastest</b>, "
@@ -139,6 +139,6 @@ def competitor_note(cf):
         out.append("<i>Still blank: "
                    + ", ".join(f"@{h}" for h in cf["missing"]) + ".</i>")
     if cf["weeks"] < 2:
-        out.append("<i>One reading so far. Growth comparisons appear once there "
-                   "are two.</i>")
+        out.append("<i>One reading so far, so there is nothing to compare it "
+                   "with yet. Change appears next month, once there are two.</i>")
     return out
