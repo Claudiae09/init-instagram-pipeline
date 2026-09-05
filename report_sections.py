@@ -324,6 +324,13 @@ def story_findings(csv_dir, days=None):
         "truncated": bool(data_start is not None
                           and requested_start is not None
                           and data_start > requested_start),
+        # The date this window stops being partial: once collection is `days`
+        # old, a rolling window is fully covered. The year-to-date window is
+        # only whole once the calendar rolls past the first collection year.
+        "complete_on": (
+            (data_start + _pd.Timedelta(days=days)).strftime("%-d %b %Y")
+            if data_start is not None and days is not None
+            else (f"1 Jan {data_start.year + 1}" if data_start is not None else None)),
         "by_type": [],
         "thin": len(s) < 40,        # flag that this is still an early read
     }
@@ -371,13 +378,7 @@ def story_recommendations(sf):
                "replies — those live only in the app. The likes/sticker figure above is "
                "derived from total interactions.</i>")
     if sf.get("truncated"):
-        out.append(
-            f"<i>Instagram's API only returns stories that are still live, so "
-            f"anything posted before daily collection began on {sf['since']} is "
-            f"gone for good — it cannot be backfilled. This view therefore covers "
-            f"{sf['span_days']} days, not a full "
-            f"{'year' if sf['days'] is None else str(sf['days']) + ' days'}, and "
-            f"Month and Year will match until more history builds up.</i>")
+        pass                      # covered by the banner at the top of the pane
     elif sf["thin"]:
         out.append(f"<i>Early read — {sf['n']} stories. Firms up as the daily job runs.</i>")
     return out

@@ -146,6 +146,21 @@ def format_section(m):
                           f'<div><span>{sf["passive"]:.0f}</span>likes &amp; stickers</div>'
                           f'<div><span>{sf["shares"]:.0f}</span>shares</div>'
                           f'<div><span>{sf["sets"]}</span>posted</div></div>')
+                # A window we cannot fill gets a banner, not a footnote — the
+                # numbers repeat across Month and Year and that reads as a bug
+                # unless the limitation is stated up front. It clears itself:
+                # `truncated` goes false once collection covers the window.
+                banner = ""
+                if sf.get("truncated"):
+                    what = "a full year" if days is None else f"a full {days} days"
+                    banner = (
+                        f'<p class="banner"><b>Instagram\u2019s API cannot give us '
+                        f'this history.</b> Stories are only retrievable while they '
+                        f'are still live, so anything posted before daily collection '
+                        f'began on {esc(sf["since"])} is gone for good and cannot be '
+                        f'recovered. This view covers {sf["span_days"]} days rather '
+                        f'than {what}. It completes on its own by '
+                        f'{esc(sf["complete_on"])}.</p>')
                 span_s = "this year" if days is None else f"the last {days} days"
                 # Say what the window actually covers, not just what was asked
                 # for — collection began mid-year, so Month and Year overlap.
@@ -160,7 +175,8 @@ def format_section(m):
                               f"stor{'y' if sf['sets'] == 1 else 'ies'} "
                               f"({sf['n']} frames) across {sf['days_active']} "
                               f"day{'' if sf['days_active'] == 1 else 's'}.")
-                body = (st + f'<p class="line"><b>Collected daily</b>, since stories '
+                body = (banner + st
+                        + f'<p class="line"><b>Collected daily</b>, since stories '
                         f'vanish after 24 hours. Showing {span_s}.{detail}</p><ul>'
                         + "".join(f"<li>{r}</li>" for r in R.story_recommendations(sf))
                         + "</ul>")
@@ -300,6 +316,10 @@ ul.weak li{margin:0 0 6px}
 .note{background:#fff8e6;border:1px solid #f0e0b8;border-radius:8px;padding:9px 12px;
 margin:10px 0;font-size:.87rem;color:#6b5518}
 .allhist{color:var(--muted);font-size:.82rem;margin:10px 0 0;font-style:italic}
+.banner{background:#fff4e0;border:1px solid #efd3a3;border-left:4px solid #d98c1f;
+border-radius:8px;padding:12px 14px;margin:0 0 16px;font-size:.88rem;
+color:#6b4a12;line-height:1.55}
+.banner b{color:#5a3d0d}
 .diag,.fix{display:block;font-size:.87rem;margin-top:4px;line-height:1.5}
 .diag{color:var(--muted)}
 .fix{color:var(--good);font-weight:500}
