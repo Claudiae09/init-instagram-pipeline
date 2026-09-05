@@ -11,6 +11,8 @@ import datetime as dt
 import pandas as pd
 
 MIN_POSTS = 3          # below this a comparison is noise, not a signal
+MIN_FMT_POSTS = 5      # minimum posts before we call a format a winner
+MAX_POST_CONCENTRATION = 0.45   # if one post is >45% of a format's shares, skip it
 FORMATS = ["IG carousel", "IG reel", "IG image"]
 
 
@@ -25,7 +27,18 @@ def pct_change(before, after):
 
 
 def window(m, days, offset=0):
-    """Posts published in the `days`-long window ending `offset` days ago."""
+    """Posts published in the `days`-long window ending `offset` days ago.
+
+    `days=None` means "this calendar year to date" (and with an offset, the same
+    span of the previous year) so the Year view is genuinely about this year,
+    not a rolling 365 days straddling two.
+    """
+    if days is None:
+        today = m["d"].max()
+        year = today.year - (1 if offset else 0)
+        start = pd.Timestamp(year=year, month=1, day=1)
+        end = today.replace(year=year) if offset else today
+        return m[(m["d"] >= start) & (m["d"] <= end)]
     end = m["d"].max() - pd.Timedelta(days=offset)
     start = end - pd.Timedelta(days=days)
     return m[(m["d"] > start) & (m["d"] <= end)]
@@ -50,11 +63,18 @@ def compare_periods(m, days, label, prior_label):
     }
     d["share_change"] = pct_change(d["prev_share_1k"], d["share_1k"])
     d["reach_change"] = pct_change(d["prev_reach_med"], d["reach_med"])
-    # best and worst format inside the window (needs enough posts each)
+    # Best/worst format inside the window. Two guards, because a format with a
+    # handful of posts and one viral outlier will otherwise look like the winner:
+    #   1. at least MIN_FMT_POSTS posts
+    #   2. no single post may account for most of that format's shares
     per_fmt = []
     for f, g in cur.groupby("post_type"):
-        if len(g) >= 2:
-            per_fmt.append((f, rate(g, "shares"), len(g)))
+        if len(g) < MIN_FMT_POSTS:
+            continue
+        tot = g["shares"].sum()
+        if tot > 0 and g["shares"].max() / tot > MAX_POST_CONCENTRATION:
+            continue                      # one post is carrying it — not a pattern
+        per_fmt.append((f, rate(g, "shares"), len(g)))
     d["formats"] = sorted(per_fmt, key=lambda x: -x[1])
     return d
 
@@ -370,3 +390,63 @@ def diagnosis_text(dg):
             "hook, the visual. Open the weak posts below and compare them to your best "
             "performer for that format.")
     return out
+
+
+# ── why did ONE post underperform? ──────────────────────────────────────────
+def explain_post(m, post):
+    """Compare a weak post against its own format's benchmarks and say what
+    plausibly went wrong — distribution, timing, caption, or the content itself.
+    Returns (diagnosis, suggestion)."""
+    fmt = post["post_type"]
+    peers = m[m["post_type"] == fmt]
+    if len(peers) < 8:
+        return ("Not enough posts of this format to compare against yet.", "")
+
+    peer_reach = peers["reach"].median()
+    peer_rate = rate(peers, "shares")
+    caplen = len(str(post.get("caption") or ""))
+    peer_cap = peers["caption"].fillna("").astype(str).str.len().median()
+    hour = post.get("publish_hour_est")
+
+    # was it seen? reach well below the format's normal
+    seen_badly = post["reach"] < peer_reach * 0.7
+    # was it seen but ignored?
+    ignored = (not seen_badly) and post["rate"] < peer_rate * 0.5
+
+    bits, fix = [], []
+    if seen_badly:
+        bits.append(f"it reached {post['reach']:,.0f} people against a typical "
+                    f"{peer_reach:,.0f} for {fmt.replace('IG ','')}s — it did not get "
+                    f"distributed")
+        best = best_time_for(m, fmt)
+        if best and hour is not None and abs(int(hour) - (best["hour"] or int(hour))) >= 2:
+            bits.append(f"it went out at {int(hour)}:00, away from the "
+                        f"{best['day']} {best['hour']}:00 slot that reaches most")
+            fix.append(f"try this content again in the {best['day']} "
+                       f"{best['hour'] % 12 or 12}"
+                       f"{'am' if best['hour'] < 12 else 'pm'} slot")
+        else:
+            fix.append("the hook or opening frame likely didn't hold people in the "
+                       "first seconds — that's what drives distribution")
+    if ignored:
+        bits.append(f"plenty of people saw it ({post['reach']:,.0f}) but almost nobody "
+                    f"passed it on")
+        if caplen < peer_cap * 0.75:
+            bits.append(f"its caption is {caplen} characters against a typical "
+                        f"{peer_cap:.0f}")
+            fix.append("give it the context that makes it worth forwarding — who it's "
+                       "for, why it matters, what happens next")
+        else:
+            fix.append("this reads as an announcement rather than something someone "
+                       "would send to a friend. Add a reason to share: name the person "
+                       "it helps, or make it feel like news worth passing on")
+    if fmt == "IG image":
+        fix.append("single graphics are your weakest format for sharing — the same "
+                   "message as a carousel usually travels further")
+    if not bits:
+        bits.append("nothing in the timing, format or caption stands out — this looks "
+                    "like the content simply didn't land")
+        fix.append("compare it against your best performer for this format and look at "
+                   "the difference in subject and hook")
+    return ("Likely why: " + "; ".join(bits) + ".",
+            "Try next: " + "; ".join(fix) + "." if fix else "")

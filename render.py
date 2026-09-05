@@ -44,7 +44,7 @@ CHARTS = [
 
 PERIODS = [("week", "Week", 7, "the week before"),
            ("month", "Month", 30, "the month before"),
-           ("year", "Year", 365, "last year")]
+           ("year", "Year", None, "the same span last year")]
 
 FORMAT_LABEL = {"IG carousel": "Carousels", "IG reel": "Reels", "IG image": "Graphics"}
 
@@ -79,7 +79,8 @@ def decision_card(m):
         active = " is-on" if i == 1 else ""          # default to Month
         tabs.append(f'<button class="seg{active}" data-tab="p-{key}" '
                     f'role="tab" aria-selected="{str(i == 1).lower()}">{label}</button>')
-        meta = (f"{p['posts']} posts in the last {days} days"
+        span = ("this year so far" if days is None else f"the last {days} days")
+        meta = (f"{p['posts']} posts in {span}"
                 if p.get("enough") else "not enough posts yet")
 
         # "Why did this move?" — only shown when we can actually say something.
@@ -89,12 +90,18 @@ def decision_card(m):
             lines = R.diagnosis_text(dg)
             weak = ""
             if dg.get("weak_posts"):
-                items = "".join(
-                    f'<li><a href="{esc(w["permalink"])}" target="_blank" '
-                    f'rel="noopener">{esc(str(w["caption"])[:80])}…</a> '
-                    f'<span class="dim">{w["post_type"].replace("IG ","")} · '
-                    f'{w["rate"]:.1f} per 1k</span></li>'
-                    for w in dg["weak_posts"])
+                parts = []
+                for w in dg["weak_posts"]:
+                    why_txt, fix_txt = R.explain_post(m, w)
+                    parts.append(
+                        f'<li><a href="{esc(w["permalink"])}" target="_blank" '
+                        f'rel="noopener">{esc(str(w["caption"])[:80])}…</a> '
+                        f'<span class="dim">{w["post_type"].replace("IG ","")} · '
+                        f'{w["rate"]:.1f} per 1k</span>'
+                        f'<span class="diag">{esc(why_txt)}</span>'
+                        + (f'<span class="fix">{esc(fix_txt)}</span>' if fix_txt else "")
+                        + "</li>")
+                items = "".join(parts)
                 weak = ('<p class="line"><b>Worth a look — the weakest posts '
                         f'this period:</b></p><ul class="weak">{items}</ul>')
             if lines or weak:
@@ -262,6 +269,10 @@ color:var(--accent);display:flex;align-items:center;gap:6px;padding:4px 0}
 ul.weak{margin:6px 0 4px;padding-left:20px;font-size:.9rem}
 ul.weak li{margin:0 0 6px}
 .dim{color:var(--muted);font-size:.85em}
+.diag,.fix{display:block;font-size:.87rem;margin-top:4px;line-height:1.5}
+.diag{color:var(--muted)}
+.fix{color:var(--good);font-weight:500}
+ul.weak li{margin:0 0 14px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;
 margin:14px 0 18px}
 .stats div{background:var(--card);border:1px solid var(--line);border-radius:10px;
