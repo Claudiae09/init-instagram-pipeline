@@ -69,20 +69,6 @@ jobs:
       - name: Run the invariant tests
         run: python tests.py
 
-      # Deploy straight from here rather than waiting for Cloudflare to notice
-      # the commit: one deploy per run instead of one per commit, and failures
-      # land in this log rather than a dashboard.
-      #
-      # The guard reads a JOB-level env var, not a step-level one. A step's own
-      # env block is not available to its own `if`, so the original version of
-      # this would have evaluated the condition against nothing.
-      - name: Deploy to Cloudflare
-        if: env.HAS_CF_TOKEN != ''
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: deploy
-
       - name: Commit updated data
         run: |
           git config user.name  "github-actions[bot]"
@@ -95,3 +81,17 @@ jobs:
             git pull --rebase --autostash origin main || true
             git push
           fi
+
+      # Last, and after the commit: a deploy failure must not discard the day's
+      # data. It did exactly that for two days before this was reordered.
+      #
+      # wranglerVersion is pinned to 4 because an assets-only Worker has no
+      # entry-point script, and wrangler 3 refuses to deploy without one:
+      #   "Missing entry-point: ... or the `main` config field"
+      - name: Deploy to Cloudflare
+        if: env.HAS_CF_TOKEN != ''
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          wranglerVersion: '4'
+          command: deploy
