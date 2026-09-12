@@ -13,3 +13,4 @@ __pycache__/
 
 # produced locally from a personal Instagram export; not for the repo
 csv/follow_gap.csv
+csv/not_following_back*.txt
