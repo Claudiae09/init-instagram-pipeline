@@ -10,3 +10,6 @@ __pycache__/
 # Token cache / logs
 .token_cache.json
 *.log
+
+# produced locally from a personal Instagram export; not for the repo
+csv/follow_gap.csv
